@@ -7,3 +7,7 @@ __pycache__/
 .vscode/
 logs/
 results/
+scratch.py
+notes_log.txt
+requests.jsonl
+PYTHON_NOTES.md

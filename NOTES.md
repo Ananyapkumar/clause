@@ -192,3 +192,172 @@ I expected fabrication on empty and garbage input. The model refused cleanly bot
 ### Status
 
 Day 2 complete: validated structured output, retry on failure, four documented experiments, two findings that directly justify the evaluation work in Day 5.
+
+---
+
+## DAY 3 — Hand-written tool-calling loop
+
+**Date:** 12 August 2026
+**Model:** `gemini-3.6-flash`
+**File:** `agent.py`
+
+### What I built
+
+An agent loop with no framework — no LangChain, no LangGraph. About 120 lines.
+
+Three tools:
+
+| Tool | Type | What it does |
+|---|---|---|
+| `lookup_customer(name)` | read | Returns a customer record from a dictionary |
+| `log_note(text)` | **write** | Appends a timestamped line to `notes_log.txt` |
+| `list_customers()` | read | Returns every known customer name |
+
+The read/write distinction is deliberate. `log_note` changes state on disk; the other two only observe. A tool that acts warrants more caution than one that looks.
+
+### The core idea
+
+**The model cannot execute anything.** It only produces text. What looks like "the AI used a tool" is:
+
+1. Send the question plus a list of tools the model is permitted to request
+2. The model replies asking for a named tool with named arguments
+3. **My code** runs it — my Python, my machine
+4. Append the result to the conversation and send the whole thing back
+5. The model reads the result and either answers or asks for another tool
+6. Repeat, capped at `MAX_TURNS = 5`
+
+Every agent framework is a wrapper around these six steps.
+
+### Errors hit
+
+**`Invalid input received` — 400, on the second turn only**
+
+I first used `previous_interaction_id`, asking Google to remember the conversation server-side. That only works if the interaction was explicitly stored, which it wasn't — so the follow-up referenced a conversation the API had no record of.
+
+**Fix:** keep the history locally and resend the whole conversation each turn. Better design regardless — no dependence on server-side state, and the accumulating history is visible in the code.
+
+**`SyntaxError: unmatched ')'`**
+
+Edited a function call and left the old closing bracket behind. Python names the exact line; the fix is to delete the stray character.
+
+### Findings
+
+**1. The API is stateless.** It remembers nothing between calls. A "conversation" is the entire transcript being resent every single turn. This is why long conversations cost more — you pay to re-send the history each time.
+
+**2. Thought steps carry a signature that must be preserved.** Verbose output showed the model emitting a `thought` step with a cryptographic `signature` before choosing a tool. That has to be handed back on the next turn or the model loses its own reasoning chain. My code appends *all* steps (`history.extend(interaction.steps)`) rather than filtering for the ones I care about — an earlier version would have silently dropped it.
+
+**3. Tool descriptions are the interface.** The model never sees the Python. It sees only the `description` and `parameters` text. A vague description means the wrong tool gets picked or arguments get invented. Writing these well is the real work.
+
+**4. The model chains tools on its own.** Asked to "look up Globex, then log a note recording their plan and monthly value," it called `lookup_customer`, read the result, then constructed the note text itself and passed it to `log_note`. Nobody specified what the note should say — the output of step 1 became the input to step 2, chosen by the model.
+
+**5. Parallel tool calls happen.** Asked which customer is worth more, the model requested `lookup_customer` **twice in a single turn**, then compared:
+
+```
+[turn 1] list_customers({})
+[turn 2] lookup_customer({'name': 'acme corp'})
+[turn 2] lookup_customer({'name': 'globex'})     <- same turn
+[turn 3] answered
+```
+
+This is why the code loops over a *list* of calls rather than assuming one, and why `call_id` exists — each result must be matched back to the request that asked for it. Code written for a single call per turn would have broken here.
+
+### Security note
+
+The dispatcher can only invoke the three named functions. The model cannot make the program do anything not explicitly listed. That boundary is the main security control in any agent system — worth stating plainly given that one of these tools writes to disk.
+
+### The 60-second explanation
+
+> The model can't run anything — it only produces text. I send the question plus a list of tools it may request. It replies asking for a specific tool with specific arguments. My code runs that tool, appends the result to the conversation history, and sends the whole thing back. The model reads the result and either answers or asks for another tool. That repeats until it answers, capped at five turns so it can't loop forever. The API is stateless, so I resend the full history each turn — including the model's thought steps, which carry a signature it needs to keep its reasoning intact.
+
+### Status
+
+Day 3 complete: working multi-step agent loop, three tools, parallel tool calls handled, no framework.
+
+---
+
+## DAY 4 — FastAPI service, cost and latency measurement
+
+**Date:** 13 August 2026
+**Model:** `gemini-3.6-flash`
+**Files:** `api.py` (new), `analyze_logs.py` (new), `extract.py` (refactored)
+
+### What I built
+
+Turned the extraction script into a **service** and made every run measurable.
+
+- **`api.py`** — FastAPI app with `POST /extract` and `GET /health`. Request and response shapes defined with Pydantic, so invalid input is rejected before it reaches any application code. Interactive docs auto-generated at `/docs`.
+- **`extract.py` refactored** — `extract()` now returns an `ExtractionRun` containing the result *plus* attempts, latency, token counts and estimated cost. Demo code moved under an `if __name__ == "__main__":` guard so importing the module no longer fires a live API call.
+- **JSONL logging** — every run appends one line to `requests.jsonl`: timestamp, source (`cli` or `api`), model, input length, success, attempts, latency, tokens, cost, error.
+- **`analyze_logs.py`** — reads the log and reports totals, median/mean latency, spread, and an input-length vs latency table.
+
+### Screenshots
+
+**Successful extraction — `POST /extract`, 200**
+
+![POST /extract returning 200 with validated structured output](docs/screenshots/day4-extract-200.png)
+
+Response includes the validated result alongside `attempts: 1`, `latency_ms: 6967`, `cost_usd: 0.0003556`. Confidence came back `0.1` on Lorem ipsum input — consistent with the Day 2 finding that the model reports low confidence honestly when the schema permits it.
+
+**Invalid request rejected — 422**
+
+![422 Unprocessable Entity when the required text field is missing](docs/screenshots/day4-extract-422.png)
+
+Request body sent without the required `text` field. FastAPI rejected it before any application code ran — no API call made, no tokens spent, and a precise machine-readable error returned (`"loc": ["body", "text"], "msg": "Field required"`). This is the Day 2 Pydantic work operating at the network boundary.
+
+**Log analysis output**
+
+![analyze_logs.py output showing cost and latency statistics](docs/screenshots/day4-analyze-logs.png)
+
+### Measurements (n=3)
+
+```
+runs:            3
+successful:      3 / 3
+avg attempts:    1.00
+
+total cost:      $0.000942
+cost per run:    $0.000314
+cost per 1,000:  $0.31
+
+median latency:  6967 ms
+mean latency:    7451 ms
+fastest:         6217 ms
+slowest:         9170 ms
+spread:          2953 ms
+```
+
+**Cost: roughly $0.31 per 1,000 extractions** at current token usage and list pricing.
+
+### Finding — latency is not driven by input length
+
+| Input (chars) | Input tokens | Output tokens | Latency |
+|---|---|---|---|
+| 67 | 71 | 88 | 6,217 ms |
+| 534 | 159 | 119 | **9,170 ms** |
+| 1,139 | 302 | 106 | 6,967 ms |
+
+Input grew **17×** across these three runs and latency did not follow. The shortest input took nearly as long as the longest, and the middle one was slowest of all.
+
+Latency appears to be dominated by fixed overhead plus generation and internal reasoning time — not by how much text is sent. The `thought` steps observed on Day 3 are a plausible contributor, and their length varies run to run.
+
+**Consequence:** the intuitive optimisation — shorten the prompt to go faster — is not supported by this data. Reducing *output* length, using a smaller model, or parallelising requests are the levers worth testing instead.
+
+**Caveat:** n=3 is far too small to be conclusive, and Day 2 already established that this model is non-deterministic. Treated as a hypothesis to re-test with a larger sample.
+
+### Design decisions
+
+- **Token counts accumulate across retries.** A run that needed three attempts cost roughly three times as much; recording only the final attempt would understate real cost by two-thirds.
+- **The stopwatch starts before the retry loop.** Latency measures what the caller actually waited, not just the successful attempt.
+- **UTC timestamps.** Local time is ambiguous across zones and shifts twice a year.
+- **Latency reported as median, not mean.** One slow outlier drags the mean; median stays representative. Already visible here — 6,967 vs 7,451 ms.
+- **Kept synchronous, not async.** A 2–9 second call is acceptable for a direct HTTP request. Async job handling becomes necessary once documents get long enough to push response times past ~30 seconds — revisit in Week 2.
+
+### Open question
+
+**6.2–9.2 seconds is slow.** No explanation yet for the variance, and no baseline for what this model *should* do. Needs a larger sample before drawing conclusions.
+
+### Status
+
+Day 4 complete: working HTTP service, structured request logging, and the ability to answer cost and latency questions from my own data.
+
+**Outstanding:** sample size is 3, not the 10 originally planned. Latency finding to be re-tested at n≥10.
