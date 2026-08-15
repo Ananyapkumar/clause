@@ -1,0 +1,22 @@
+{
+  "version": "v0",
+  "run_at": "2026-08-15T05:46:21.311139+00:00",
+  "model": "gemini-3.6-flash",
+  "summary": {
+    "documents": 2,
+    "field_accuracy": 1.0,
+    "fully_correct_docs": 1.0,
+    "per_field": {
+      "model_number": 1.0,
+      "wattage_w": 1.0,
+      "luminous_flux_lm": 1.0,
+      "cct_k": 1.0,
+      "cri": 1.0,
+      "beam_angle_deg": 1.0,
+      "ip_rating": 1.0,
+      "lifespan_hours": 1.0,
+      "dimmable": 1.0
+    }
+  },
+  "failures": []
+}

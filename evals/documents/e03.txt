@@ -1,0 +1,23 @@
+HALDEN ILLUMINATION
+Technical Specification Sheet
+
+
+LINEA 40 SUSPENDED LINEAR
+Model: HL-LIN40
+
+
+SPECIFICATION
+
+Power consumption (system)      40 W
+Output                          4400 lm
+CCT                             4000 K
+CRI                             Ra 90
+Beam distribution               110 deg
+Protection rating               IP20
+Rated lifetime L80B10           60000 hours
+Dimming                         DALI dimmable
+Length                          1200 mm
+Mounting                        Suspended, 1.5 m cable
+
+
+Halden Illumination. E&OE.

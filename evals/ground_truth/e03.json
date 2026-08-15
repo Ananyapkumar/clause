@@ -1,0 +1,11 @@
+{
+  "model_number": "HL-LIN40",
+  "wattage_w": 40,
+  "luminous_flux_lm": 4400,
+  "cct_k": 4000,
+  "cri": 90,
+  "beam_angle_deg": 110,
+  "ip_rating": "IP20",
+  "lifespan_hours": 60000,
+  "dimmable": true
+}

@@ -361,3 +361,130 @@ Latency appears to be dominated by fixed overhead plus generation and internal r
 Day 4 complete: working HTTP service, structured request logging, and the ability to answer cost and latency questions from my own data.
 
 **Outstanding:** sample size is 3, not the 10 originally planned. Latency finding to be re-tested at n≥10.
+
+---
+
+## DAY 5 — Project 1 rescoped; evaluation harness built
+
+**Date:** 13 August 2026
+**Model:** `gemini-3.6-flash`
+
+### Project 1 rescoped to lighting product datasheets
+
+Dropped generic email extraction. Project 1 now extracts nine fields from
+lighting product datasheets — a domain I work in, so I can write authoritative
+ground truth. That domain knowledge is the differentiator: anyone can label
+emails, very few people can say whether a wattage figure is system power or
+LED load.
+
+The vertical decision was originally scheduled for Day 7. Bringing it forward
+cost almost nothing because no ground truth had been written yet. Discovering
+it on Day 20, with sixty labelled cases and three versions of results, would
+have been unrecoverable.
+
+### The nine fields
+
+`model_number`, `wattage_w`, `luminous_flux_lm`, `cct_k`, `cri`,
+`beam_angle_deg`, `ip_rating`, `lifespan_hours`, `dimmable`
+
+### Schema decisions — documented, not to be silently changed
+
+These are the judgement calls. They are stated in `schema.py`, written into
+the extraction prompt, and applied identically in the ground truth.
+
+| Decision | Rule |
+|---|---|
+| `model_number` | Full order code where present, else the model name |
+| `wattage_w` | SYSTEM wattage (includes driver losses), never LED load |
+| `luminous_flux_lm` | LUMINAIRE output, never bare LED module output |
+| `lifespan_hours` | L80/B10 rated life, never warranty hours |
+
+**Candidate field deferred:** `dimming_protocol` (DALI / 0-10V / TRIAC).
+Not adopted. Adding a field mid-week invalidates every ground-truth file
+already written and breaks version comparison. Revisit at a version boundary.
+
+### JSON conventions
+
+Numbers bare, no units, no thousands separators. Units live in the field name.
+Missing values as unquoted `null`. `dimmable` as boolean. Dates as YYYY-MM-DD.
+
+### What I built
+
+- **`schema.py`** — the nine fields with the decisions above in the docstring
+- **`extract.py`** — rewritten for datasheets; the disambiguation rules are
+  stated explicitly in the prompt, because the model cannot infer that system
+  wattage beats LED load
+- **`evaluate.py`** — reads document/ground-truth pairs, scores field by field,
+  reports **per-field** accuracy so a failure points at a specific field rather
+  than a vague overall number
+- **`api.py`** — FastAPI service updated to the new schema
+
+### Guardrail: ground truth cannot be half-written
+
+Every blank ground-truth file starts as `"FILL_ME_IN"` on all nine fields, and
+`evaluate.py` refuses to score any case still containing a placeholder, naming
+the unfilled fields. A rule enforced in code rather than left to discipline.
+
+### FINDING — the first eval run scored 11.1%, and the model was correct
+
+First run: **11.1% field accuracy (2/18)**. It looked like a badly failing
+extractor.
+
+Investigation: the model had returned the correct value for **every field on
+both documents**. The ground truth was wrong — I had copied a formatting
+example describing a completely different product into both answer files.
+
+**The score was measuring my answer key, not the system.**
+
+This is the classic evaluation failure mode: a broken ground truth produces a
+number that looks authoritative and is meaningless. Had I trusted it, the next
+session would have been spent "fixing" a pipeline that was already correct.
+
+Corrected the answer key, re-ran: **100% (18/18)**.
+
+**Why this was caught cheaply:** the harness was built at 2 cases rather than
+gated on 15. The comparison logic is identical at 2 or 200, so building early
+surfaces exactly this class of problem while it costs minutes to fix. At 15
+cases it would have surfaced after ninety minutes of labelling.
+
+### v0 baseline
+
+```
+version              v0
+documents            2
+field accuracy       100.0%   (18/18)
+fully correct docs   100.0%
+total cost           $0.000816
+median latency       7126 ms
+```
+
+**This number is not an accuracy claim.** Two deliberately simple documents:
+single variant, every value stated once and plainly labelled, no efficacy
+figure, no warranty hours. 100% here proves the *harness* works. It says
+nothing about performance on hard documents.
+
+The real test is E01, which contains four natural traps: an efficacy figure
+(130 lm/W) mistakable for wattage; system wattage alongside LED load; warranty
+hours (25,000) alongside rated life (60,000); luminaire flux alongside LED
+module flux. Expect the score to fall.
+
+### Honest caveat on ground truth provenance
+
+Ground truth for E02 and E03 was transcribed with assistance on a
+time-constrained day. Both documents are pure transcription — every value is
+printed once and plainly labelled, with no judgement involved — and both were
+verified against the source documents.
+
+**E01 onward is hand-written by me, unassisted.** Those are the cases that
+demonstrate expert ground truth, because those are the cases containing
+judgement. E02 and E03 demonstrate that the harness runs. Claiming more than
+that in a case study would be dishonest.
+
+### Status
+
+Day 5 complete: nine-field schema with documented decisions, working evaluation
+harness with per-field reporting, v0 baseline established, FastAPI service
+updated.
+
+**Next:** E01 ground truth by hand, then re-run to see the score on a hard
+document.

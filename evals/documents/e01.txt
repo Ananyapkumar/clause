@@ -1,0 +1,50 @@
+VERTEX LIGHTING SYSTEMS
+────────────────────────────────────────────────────────
+PRODUCT DATASHEET
+
+ORION HIGH BAY  |  Series 4
+Order code: VX-ORN4-150-40-90-DA
+
+Engineered for warehouse, logistics and industrial
+environments. The ORION Series 4 delivers class-leading
+efficiency with an industry-best 130 lm/W, setting a new
+standard for high bay performance.
+────────────────────────────────────────────────────────
+
+ELECTRICAL
+
+  LED load                        142 W
+  System power (incl. driver)     150 W
+  Supply voltage                  220-240 V AC
+  Power factor                    > 0.95
+  Efficacy                        130 lm/W
+
+PHOTOMETRIC
+
+  LED module output               21300 lm
+  Luminaire output                19500 lm
+  Correlated colour temperature   4000 K
+  Colour rendering index          Ra 90
+  Beam angle                      90 deg
+  Glare rating (UGR)              < 22
+
+MECHANICAL / ENVIRONMENTAL
+
+  Ingress protection              IP65
+  Impact resistance               IK08
+  Operating temperature           -20 to +50 C
+  Housing                         Die-cast aluminium
+  Weight                          4.8 kg
+
+LIFETIME & WARRANTY
+
+  Warranty period                 25000 hours
+  Rated life L80/B10              60000 hours
+
+CONTROL
+
+  Dimming                         DALI-2 compatible
+
+────────────────────────────────────────────────────────
+Vertex Lighting Systems Ltd.  Rev 4.2
+Specifications subject to change without notice. E&OE.

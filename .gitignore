@@ -6,8 +6,9 @@ __pycache__/
 *.pyc
 .vscode/
 logs/
-results/
 scratch.py
 notes_log.txt
 requests.jsonl
 PYTHON_NOTES.md
+# NOTE: results/ is deliberately NOT ignored.
+# Eval scores and failure analysis are portfolio evidence.

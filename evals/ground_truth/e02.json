@@ -1,0 +1,11 @@
+{
+  "model_number": "NW-ARC-S-18-30",
+  "wattage_w": 18,
+  "luminous_flux_lm": 1620,
+  "cct_k": 3000,
+  "cri": 80,
+  "beam_angle_deg": 60,
+  "ip_rating": "IP44",
+  "lifespan_hours": 50000,
+  "dimmable": false
+}
