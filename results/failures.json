@@ -1,9 +1,9 @@
 {
   "version": "v0",
-  "run_at": "2026-08-15T05:46:21.311139+00:00",
+  "run_at": "2026-08-18T08:17:23.612152+00:00",
   "model": "gemini-3.6-flash",
   "summary": {
-    "documents": 2,
+    "documents": 3,
     "field_accuracy": 1.0,
     "fully_correct_docs": 1.0,
     "per_field": {

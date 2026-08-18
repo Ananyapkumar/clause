@@ -1,0 +1,13 @@
+# Keep these OUT of the image. Same idea as .gitignore.
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore
+scratch.py
+notes_log.txt
+requests.jsonl
+PYTHON_NOTES.md
+docs/

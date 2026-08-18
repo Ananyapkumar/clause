@@ -81,6 +81,21 @@ for doc in sorted(DOCS_DIR.glob("*.txt")):
         missing_truth.append(f"{case_id} (unfilled: {', '.join(placeholders)})")
         continue
 
+    # A key that is ABSENT is not the same as a key set to null.
+    # Absent means "I forgot to write this". Null means "the document
+    # genuinely does not state it". Reading absent as null silently
+    # scores a forgotten field as a deliberate answer - and the model
+    # gets marked wrong for being right. Refuse instead.
+    absent = [f for f in FIELDS if f not in truth]
+    if absent:
+        missing_truth.append(f"{case_id} (keys absent: {', '.join(absent)})")
+        continue
+
+    unknown = [k for k in truth if k not in FIELDS]
+    if unknown:
+        missing_truth.append(f"{case_id} (unknown keys: {', '.join(unknown)})")
+        continue
+
     cases.append({"id": case_id, "text": doc.read_text(encoding="utf-8"), "truth": truth})
 
 if missing_truth:

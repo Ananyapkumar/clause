@@ -1,11 +1,11 @@
 {
-  "model_number": "FILL_ME_IN",
-  "wattage_w": "FILL_ME_IN",
-  "luminous_flux_lm": "FILL_ME_IN",
-  "cct_k": "FILL_ME_IN",
-  "cri": "FILL_ME_IN",
-  "beam_angle_deg": "FILL_ME_IN",
-  "ip_rating": "FILL_ME_IN",
-  "lifespan_hours": "FILL_ME_IN",
-  "dimmable": "FILL_ME_IN"
+"model_number":"VX-ORN4-150-40-90-DA",
+"ip_rating":"IP65",
+"wattage_w": 150,
+"luminous_flux_lm": 19500,
+"cct_k": 4000,
+"cri": 90,
+"beam_angle_deg": 90,
+"lifespan_hours": 60000,
+"dimmable": true
 }
