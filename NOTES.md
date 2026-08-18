@@ -488,3 +488,141 @@ updated.
 
 **Next:** E01 ground truth by hand, then re-run to see the score on a hard
 document.
+
+---
+
+## DAY 6 — Hard case scored; deployed to production
+
+**Date:** 18 August 2026
+**Live:** https://clause-9kq9.onrender.com
+**Model:** `gemini-3.6-flash`
+
+### v0 baseline — 3 documents, 27/27 fields
+
+```
+field accuracy       100.0%   (27/27)
+fully correct docs   100.0%
+total cost           $0.001309
+median latency       40786 ms
+```
+
+Per field: all nine at 100%.
+
+### FINDING — the model navigated all four traps on E01
+
+E01 is a deliberately hard datasheet containing four natural confusions:
+
+| Trap | What the document offers | Correct answer |
+|---|---|---|
+| Efficacy `130 lm/W` | Looks like it could be wattage or flux | Belongs to **no field** |
+| System wattage vs LED load | Both stated | **System** (includes driver losses) |
+| Warranty 25,000 h vs rated life 60,000 h | Warranty stated more prominently | **Rated life** (L80/B10) |
+| Luminaire flux vs LED module flux | Both stated | **Luminaire** |
+
+The model got all nine fields correct.
+
+**This is not evidence the model has lighting domain sense.** It is evidence
+that *encoding domain rules explicitly in the prompt is sufficient*. Those
+rules are stated verbatim in `extract.py`:
+
+```
+- wattage_w must be SYSTEM wattage (including driver losses).
+  If the datasheet also gives LED load, do NOT use that.
+- lifespan_hours must be the L80/B10 rated life. Do NOT use the
+  warranty period, even if warranty hours are stated more prominently.
+- Efficacy figures (lm/W) are NOT wattage and NOT flux.
+```
+
+Those three lines came from domain knowledge, not from the model.
+
+**Planned experiment (Day 9):** remove those three lines and re-run. The drop
+in accuracy quantifies what the domain rules are worth in points. Without that
+control, "100%" is an unfalsifiable claim.
+
+### Two ground-truth defects caught — both mine, neither the model's
+
+**1. Units left in a value.** Wrote `"cct_k": "4000 K"` where the convention
+requires bare numbers — the unit already lives in the field name. The model
+returned `4000` and was marked wrong for being right.
+
+Also found: every numeric value in that file was a quoted string, and
+`dimmable` was `"TRUE"`. Six of the seven passed anyway, because the comparison
+does `float(predicted) == float(expected)` and `float("150")` succeeds, and
+because `bool("TRUE")` is truthy. **Only the one value that could not be coerced
+to a number surfaced.** The comparison logic was more lenient than the stated
+convention, so six violations were hidden behind one visible failure.
+
+**2. Two keys absent from the file.** While removing quotes I deleted the
+`model_number` and `ip_rating` lines entirely. `truth.get(field)` returns
+`None` for a missing key, so the evaluator read them as "the document does not
+state this" — and marked the model wrong on two correct answers.
+
+**Fix, now in `evaluate.py`:** absent keys and unknown keys are both rejected
+before scoring, with the offending key named.
+
+> **Absent is not null.** Absent means "I forgot to write this."
+> Null means "the document genuinely does not state it."
+> Treating them the same silently converts an omission into an assertion.
+
+### Pattern worth naming
+
+This is the **second consecutive session** where the evaluation produced a wrong
+number because of a defect in the answer key rather than the system under test.
+Day 5: a formatting example copied in as ground truth (11.1%). Day 6: missing
+keys and units in values (92.6%).
+
+Both were caught within minutes because the eval runs on 3 cases. At 15 cases
+each would have surfaced after an hour of labelling.
+
+**An evaluation score is only as trustworthy as the answer key behind it, and
+the answer key needs its own validation.** That is why the harness now refuses
+to run on incomplete input rather than scoring it.
+
+### Deployment
+
+- `Dockerfile` — `python:3.12-slim`, dependencies installed before code is
+  copied so a code change does not reinstall the dependency layer
+- Bound to `0.0.0.0`, not `127.0.0.1` — a container bound to loopback is
+  unreachable from outside itself
+- `.dockerignore` keeps `.venv`, `.env` and `.git` out of the image
+- Deployed to Render free tier; `GOOGLE_API_KEY` set as a dashboard
+  environment variable, never in the repository
+- Health check wired to `GET /health`
+
+**Verified externally:** `GET /health` returns
+`{"status":"ok","model":"gemini-3.6-flash"}` from outside my network.
+
+**Free tier note:** the instance sleeps after ~15 minutes idle. The first
+request after a pause takes roughly 50 seconds to wake.
+
+### Docker Desktop skipped, deliberately
+
+Local Docker engine would not start — `docker version` showed a working client
+and a dead server (named pipe not found), a WSL2 or virtualisation issue.
+
+Not pursued. Render builds the image on their infrastructure from the
+`Dockerfile`; a local engine only allows testing before push. Convenient, not
+required. Debugging it would have cost the session for no gain in deliverable.
+
+### Open question — latency degraded 6x
+
+| Date | Median latency |
+|---|---|
+| 13 Aug | ~7,000 ms |
+| 18 Aug | 40,786 ms (one run peaked at 176,474 ms) |
+
+Same model, same documents, one of them tiny. Suspect free-tier rate limiting
+with SDK backoff — the eval fires calls back to back. **Not investigated.**
+
+Consequence: the Day 4 cost/latency baseline is no longer representative, and
+Week 2's before/after retrieval comparison needs a fresh measurement.
+
+### Also noted
+
+`evaluate.py` does not call `log_run`, so eval runs are absent from
+`requests.jsonl`. To be wired up on Day 8.
+
+### Status
+
+Day 6 complete. **Day 7 gate: 6 of 9.**
+Remaining: README case study, profile repositioning, written self-review.
