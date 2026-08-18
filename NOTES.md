@@ -626,3 +626,104 @@ Week 2's before/after retrieval comparison needs a fresh measurement.
 
 Day 6 complete. **Day 7 gate: 6 of 9.**
 Remaining: README case study, profile repositioning, written self-review.
+
+---
+
+## DAY 7 — Week 1 close: case study, positioning, review
+
+**Date:** 18 August 2026
+
+### What I did
+
+- Rewrote `README.md` as a case study rather than a set of install instructions
+- Repositioned GitHub and LinkedIn around the vertical
+- Wrote this review
+
+### Week 1 gate — self-assessment
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Public repo, commits across distinct days | ✅ 8 commits, 5 distinct days |
+| 2 | Deployed API at a live URL | ✅ https://clause-9kq9.onrender.com |
+| 3 | Structured outputs with validation and retry | ✅ Pydantic + native JSON schema, retry ×3 |
+| 4 | Hand-written tool-calling loop, explainable unaided | ✅ `agent.py`, 3 tools, parallel calls handled |
+| 5 | Eval suite with documented score and failure analysis | ✅ v0 27/27, two answer-key defects documented |
+| 6 | Request logging with cost and latency | ✅ `requests.jsonl` + `analyze_logs.py` |
+| 7 | README passing the 5-minute test | ✅ |
+| 8 | LinkedIn + GitHub repositioned | ✅ |
+| 9 | Written self-review | ✅ this section |
+
+**9 / 9.**
+
+### What I shipped
+
+A deployed nine-field extraction service for lighting product datasheets, with
+an evaluation harness scoring against ground truth I wrote by hand, and a
+documented failure analysis.
+
+### What I can now explain to an interviewer, unaided
+
+- Why structured output makes a system measurable and free text does not
+- The difference between schema validation (wrong shape) and evaluation
+  (wrong values), and why both are needed
+- How a tool-calling loop works end to end, including why the API is stateless
+  and why thought signatures must be preserved
+- Why ground truth cannot come from the system under test
+- Why "absent" and "null" must be distinguished in an answer key
+- Why per-field accuracy is more useful than an overall percentage
+- What my system costs per document and how long it takes
+
+### Where the time went
+
+| Day | Planned | Actual | Dominant cost |
+|---|---|---|---|
+| 1 | 3h | ~5h | Python syntax, not API concepts |
+| 2 | 3h | ~6h | Python fundamentals inserted before Pydantic |
+| 3 | 3h | ~3h | One API-shape bug |
+| 4 | 3h | ~3h | Clean |
+| 5 | 3h | ~4h | Project rescope mid-day; two answer-key defects |
+| 6 | 3h | ~3h | Docker Desktop abandoned; deployed anyway |
+| 7 | 3h | ~2h | Writing |
+
+Seven days executed across eight calendar days (11–13, 18 Aug), with a five-day
+gap in the middle. **That gap is the single biggest risk to this plan** — not
+difficulty.
+
+### What actually blocked progress
+
+Not AI concepts. Python syntax on Days 1–2, and defects in my own answer key on
+Days 5–6. The AI-specific work — structured outputs, retry, tool calling,
+evaluation design — was the least troublesome part of the week.
+
+### Honest weaknesses
+
+1. **Three documents is not an eval set.** Two are trivial. 100% shows the
+   harness works, nothing more.
+2. **The central claim is untested.** "Domain rules in the prompt were
+   sufficient" has no control. The ablation on Day 9 is what makes it
+   falsifiable.
+3. **Latency regression unexplained** — 7 s to 41 s, unexamined.
+4. **Ground truth for E02/E03 was assisted.** Transcription only, and verified,
+   but they cannot be cited as evidence of expert-written ground truth. E01 was
+   hand-written unassisted; that is the case that carries the claim.
+5. **No adversarial coverage** — no injection, no non-English, no
+   internally contradictory document.
+6. **Local Docker never verified.** Render builds the image; the container has
+   not been run on my own machine.
+
+### Going into Week 2
+
+Priority order:
+
+1. Grow the eval set to 15+, mixed difficulty, ground truth by hand
+2. Run the ablation — the control the whole claim rests on
+3. Investigate latency; re-establish a cost baseline
+4. Then retrieval, measuring retriever and extractor separately
+
+**Discipline to hold:** no new frameworks, no tenth schema field, no new
+document type until a version boundary. The plan changed twice in Week 1 and
+each change cost a session. The target is now correct — hold it still.
+
+### Status
+
+**Week 1 complete. 9/9 on the gate.**
