@@ -1,0 +1,11 @@
+{
+  "model_number": "VA-ORL-1200-35-90-DALI",
+  "wattage_w": 32,
+  "luminous_flux_lm": 3410,
+  "cct_k": 3500,
+  "cri": 90,
+  "beam_angle_deg": 120,
+  "ip_rating": "IP40",
+  "lifespan_hours": 60000,
+  "dimmable": false
+}

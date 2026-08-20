@@ -1,0 +1,11 @@
+{
+  "model_number": "ML-ATL-HB-150",
+  "wattage_w": 148,
+  "luminous_flux_lm": 21400,
+  "cct_k": 5000,
+  "cri": 80,
+  "beam_angle_deg": 90,
+  "ip_rating": "IP65",
+  "lifespan_hours": 75000,
+  "dimmable": true
+}

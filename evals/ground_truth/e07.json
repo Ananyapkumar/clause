@@ -1,0 +1,11 @@
+{
+  "model_number": "HN-VST-WP-24-30",
+  "wattage_w": 24,
+  "luminous_flux_lm": 2640,
+  "cct_k": 3000,
+  "cri": 80,
+  "beam_angle_deg": 140,
+  "ip_rating": "IP54",
+  "lifespan_hours": 40000,
+  "dimmable": false
+}

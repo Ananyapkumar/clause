@@ -1,22 +1,68 @@
 {
   "version": "v0",
-  "run_at": "2026-08-20T02:13:37.128423+00:00",
+  "run_at": "2026-08-20T02:48:11.060536+00:00",
   "model": "gemini-3.6-flash",
   "summary": {
-    "documents": 3,
-    "field_accuracy": 1.0,
-    "fully_correct_docs": 1.0,
+    "documents": 7,
+    "field_accuracy": 0.9048,
+    "fully_correct_docs": 0.5714,
     "per_field": {
       "model_number": 1.0,
-      "wattage_w": 1.0,
-      "luminous_flux_lm": 1.0,
-      "cct_k": 1.0,
+      "wattage_w": 0.8571,
+      "luminous_flux_lm": 0.8571,
+      "cct_k": 0.7143,
       "cri": 1.0,
       "beam_angle_deg": 1.0,
       "ip_rating": 1.0,
       "lifespan_hours": 1.0,
-      "dimmable": 1.0
+      "dimmable": 0.7143
     }
   },
-  "failures": []
+  "failures": [
+    {
+      "id": "e04",
+      "mismatches": [
+        {
+          "field": "wattage_w",
+          "expected": "50 W",
+          "got": 50.0
+        },
+        {
+          "field": "luminous_flux_lm",
+          "expected": "6250 lm",
+          "got": 6250
+        },
+        {
+          "field": "cct_k",
+          "expected": "4000 K",
+          "got": 4000
+        },
+        {
+          "field": "dimmable",
+          "expected": "Non-dimmable",
+          "got": false
+        }
+      ]
+    },
+    {
+      "id": "e05",
+      "mismatches": [
+        {
+          "field": "cct_k",
+          "expected": "3500K",
+          "got": 3500
+        }
+      ]
+    },
+    {
+      "id": "e07",
+      "mismatches": [
+        {
+          "field": "dimmable",
+          "expected": "Non-dimmable",
+          "got": false
+        }
+      ]
+    }
+  ]
 }

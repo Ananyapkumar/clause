@@ -1,0 +1,11 @@
+{
+  "model_number": "KL-BOR-C-50-40",
+  "wattage_w": 50,
+  "luminous_flux_lm": 6250,
+  "cct_k": 4000,
+  "cri": 80,
+  "beam_angle_deg": 100,
+  "ip_rating": "IP65",
+  "lifespan_hours": 50000,
+  "dimmable": false
+}

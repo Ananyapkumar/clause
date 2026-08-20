@@ -8,6 +8,7 @@ Or import:      from extract import extract
 """
 
 import json
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,6 +25,18 @@ load_dotenv()
 MODEL = "gemini-3.6-flash"
 MAX_ATTEMPTS = 3
 LOG_FILE = "requests.jsonl"
+
+# RATE LIMITS - free tier is 20 requests per DAY on this model.
+#
+# Google reduced the free Flash quota from 250 RPD to 20 RPD. The 429 message
+# says "Please retry in ~52s", which is misleading: a DAILY counter does not
+# reset in a minute. Waiting is only useful for a per-minute limit.
+#
+# So: retry twice with a capped wait (covers per-minute limits), then stop and
+# say plainly that the daily quota is gone. Better to fail in 3 minutes with a
+# clear message than to burn 10 minutes on something that cannot succeed.
+RATE_LIMIT_RETRIES = 2
+MAX_WAIT_SECONDS = 90
 
 # Price per 1M tokens, USD. Free tier costs nothing - this computes what
 # it WOULD cost, which is the number an employer asks for.
@@ -69,6 +82,25 @@ DATASHEET:
 """
 
 
+def _seconds_to_wait(message: str, default: float = 60.0) -> float:
+    """Pull the retry delay out of a rate-limit message.
+
+    The API says e.g. "Please retry in 54.550936748s". Reading that is
+    better than guessing - too short and you get limited again, too long
+    and you waste time.
+
+    re.search finds the first match of a pattern in text. The pattern
+    r"retry in ([\\d.]+)s" means: the literal words "retry in", then one
+    or more digits-or-dots (captured), then "s".
+    """
+    match = re.search(r"retry in ([\d.]+)s", message)
+    if match:
+        # min() caps it - the API sometimes suggests a wait that only makes
+        # sense for a per-minute limit, and we do not want to sit for ages.
+        return min(float(match.group(1)) + 2, MAX_WAIT_SECONDS)
+    return default
+
+
 def estimate_cost(input_tokens: int, output_tokens: int) -> float:
     return (
         input_tokens / 1_000_000 * PRICE_INPUT_PER_1M
@@ -95,15 +127,59 @@ def extract(text: str, max_attempts: int = MAX_ATTEMPTS) -> ExtractionRun:
                 + f"{last_error}\n\nReturn valid JSON matching the schema exactly."
             )
 
-        interaction = client.interactions.create(
-            model=MODEL,
-            input=prompt,
-            response_format={
-                "type": "text",
-                "mime_type": "application/json",
-                "schema": LightingDatasheet.model_json_schema(),
-            },
-        )
+        # RATE LIMIT HANDLING - added Day 8.
+        #
+        # The free tier allows 20 requests per minute. A 7-document eval run
+        # with retries exceeds that, and the API returns 429. Previously this
+        # crashed the whole run mid-way.
+        #
+        # This also explains the latency mystery logged on Day 6: median
+        # latency went 7s -> 41s -> 176s. That was not the model being slow,
+        # it was the SDK silently backing off against this same limit.
+        #
+        # The API tells us how long to wait ("Please retry in 54.5s"), so we
+        # read it out of the message rather than guessing.
+        interaction = None
+        for rate_attempt in range(RATE_LIMIT_RETRIES):
+            try:
+                interaction = client.interactions.create(
+                    model=MODEL,
+                    input=prompt,
+                    response_format={
+                        "type": "text",
+                        "mime_type": "application/json",
+                        "schema": LightingDatasheet.model_json_schema(),
+                    },
+                )
+                break                       # success - leave the retry loop
+            except Exception as err:
+                message = str(err)
+                is_rate_limit = "429" in message or "quota" in message.lower()
+
+                # Anything that is not a rate limit is a real error - re-raise.
+                if not is_rate_limit:
+                    raise
+
+                # Out of retries. Waiting further will not help a daily quota,
+                # so stop and say what is actually wrong.
+                if rate_attempt == RATE_LIMIT_RETRIES - 1:
+                    raise RuntimeError(
+                        "Gemini free-tier quota exhausted.\n"
+                        "  The free tier allows 20 requests per DAY on this model.\n"
+                        "  Waiting will not help - the counter resets at midnight\n"
+                        "  Pacific time.\n"
+                        "  Options: wait for reset, switch MODEL in extract.py,\n"
+                        "  or enable billing (a 7-document eval costs ~$0.003).\n"
+                        f"  Original error: {message[:200]}"
+                    ) from err
+
+                wait = _seconds_to_wait(message)
+                print(f"    [rate limit] waiting {wait:.0f}s (attempt "
+                      f"{rate_attempt + 1} of {RATE_LIMIT_RETRIES})...")
+                time.sleep(wait)
+
+        if interaction is None:             # defensive; should not happen
+            raise RuntimeError("no response after rate-limit retries")
 
         # Tokens accumulate across retries - 3 attempts costs roughly 3x.
         usage = interaction.usage

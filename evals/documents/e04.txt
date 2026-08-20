@@ -1,0 +1,42 @@
+KESTREL LIGHTING SYSTEMS
+Product Data Sheet
+
+
+BOREAS COMPACT FLOODLIGHT
+Order code: KL-BOR-C-50-40
+
+
+Surface-mounted LED floodlight for facade and amenity applications.
+Die-cast aluminium body, toughened glass, adjustable bracket.
+
+
+TECHNICAL DATA
+-------------------------------------------------
+System power                        50 W
+Luminous flux (luminaire)           6250 lm
+Correlated colour temperature       4000 K
+Colour rendering index              Ra 80
+Beam angle                          100 degrees
+Ingress protection                  IP65
+Impact resistance                   IK08
+Rated life (L80/B10)                50000 h
+Control gear                        Fixed output, non-dimmable
+Operating voltage                   220-240 V AC
+Operating temperature               -25 to +45 degrees C
+
+
+MECHANICAL
+-------------------------------------------------
+Dimensions                          210 x 180 x 45 mm
+Weight                              1.4 kg
+Cable entry                         M16 gland, rear
+Finish                              Textured dark grey RAL 7016
+
+
+COMPLIANCE
+-------------------------------------------------
+CE, UKCA, EN 60598-1, EN 60598-2-5
+
+
+Kestrel Lighting Systems Ltd
+Specifications subject to change without notice.

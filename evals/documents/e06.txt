@@ -1,0 +1,53 @@
+MERIDIAN LIGHT CO.
+PRODUCT DATASHEET
+
+
+===============================================
+   ATLAS HIGH BAY  —  150W  —  22,000 LUMENS
+   Rated for 100,000 hours
+===============================================
+
+Model: ML-ATL-HB-150
+
+
+The Atlas high bay delivers over 22,000 lumens of output with a
+service life in excess of 100,000 hours, making it ideal for
+warehouse, logistics and light industrial applications.
+
+
+TECHNICAL SPECIFICATION
+-----------------------------------------------------------
+Circuit power (system)                    148 W
+LED module power                          141 W
+Luminaire luminous flux                   21400 lm
+LED module flux                           23100 lm
+Luminous efficacy (luminaire)             145 lm/W
+Correlated colour temperature             5000 K
+Colour rendering index                    Ra 80
+Beam angle                                90 degrees
+Ingress protection rating                 IP65
+Impact rating                             IK08
+
+
+LIFETIME
+-----------------------------------------------------------
+Rated life L80/B10                        75000 h
+Rated life L70/B50                        100000 h
+Warranty period                           5 years
+
+
+CONTROL
+-----------------------------------------------------------
+Dimming                                   1-10V dimmable
+Emergency option                          Available (suffix /EM3)
+
+
+MOUNTING
+-----------------------------------------------------------
+Suspension                                M10 eyebolt or hook
+Weight                                    3.8 kg
+Dimensions                                340 mm dia x 105 mm
+
+
+Meridian Light Co. Headline figures are nominal and rounded.
+Refer to the technical specification for guaranteed values.

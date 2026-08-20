@@ -25,6 +25,11 @@ TRUTH_DIR = Path("evals/ground_truth")
 RESULTS_DIR = Path("results")
 VERSION = "v0"
 
+# Which fields are which type. Used to validate the ground truth, not just
+# the model output - see the type check below.
+TEXT_FIELDS = {"model_number", "ip_rating"}
+BOOL_FIELDS = {"dimmable"}
+
 
 # =============================================================
 # COMPARING ONE FIELD
@@ -91,6 +96,51 @@ for doc in sorted(DOCS_DIR.glob("*.txt")):
         missing_truth.append(f"{case_id} (keys absent: {', '.join(absent)})")
         continue
 
+    # TYPE CHECK - added Day 8, after the third consecutive session where a
+    # defect in the ANSWER KEY produced a wrong score and the model was right.
+    #
+    #   Day 5: a formatting example copied in as ground truth   -> 11.1%
+    #   Day 6: two keys deleted from a file                     -> 92.6%
+    #   Day 8: units in values, booleans written as strings     -> 90.5%
+    #
+    # The convention was written down all three times. Writing it down did not
+    # work. So the harness enforces it: ground truth is validated the same way
+    # model output is, and a badly typed answer key is refused rather than
+    # scored against.
+    type_errors = []
+    for field in FIELDS:
+        value = truth[field]
+        if value is None:
+            continue                          # null is always allowed
+
+        if field in TEXT_FIELDS:
+            if not isinstance(value, str):
+                type_errors.append(f"{field}={value!r} should be quoted text")
+
+        elif field in BOOL_FIELDS:
+            # bool must come before the numeric check: in Python, True IS 1.
+            if not isinstance(value, bool):
+                type_errors.append(
+                    f"{field}={value!r} must be true or false "
+                    f"(lowercase, unquoted)"
+                )
+
+        else:                                 # numeric fields
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                hint = ""
+                if isinstance(value, str):
+                    hint = (
+                        " - looks like a quoted value; strip the quotes and any unit"
+                        if any(c.isdigit() for c in value)
+                        else " - not a number"
+                    )
+                type_errors.append(f"{field}={value!r} must be a bare number{hint}")
+
+    if type_errors:
+        detail = "; ".join(type_errors)
+        missing_truth.append(f"{case_id} (type errors: {detail})")
+        continue
+
     unknown = [k for k in truth if k not in FIELDS]
     if unknown:
         missing_truth.append(f"{case_id} (unknown keys: {', '.join(unknown)})")
@@ -109,7 +159,10 @@ if not cases:
     print("No complete cases. Nothing to score.")
     raise SystemExit(1)
 
-print(f"Scoring {len(cases)} case(s) against {MODEL}\n")
+print(f"Scoring {len(cases)} case(s) against {MODEL}")
+print(f"Budget: this run needs at least {len(cases)} API requests "
+      f"(more if any document needs a retry).")
+print(f"Free tier allows 20 per day.\n")
 
 
 # =============================================================

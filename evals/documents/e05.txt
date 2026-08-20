@@ -1,0 +1,53 @@
+VANTAGE ARCHITECTURAL LIGHTING
+Technical Specification
+
+
+ORION LINEAR RECESSED — 1200mm
+Order code as supplied:  VA-ORL-1200-35-90-DALI
+
+
+Recessed linear luminaire for plasterboard and grid ceilings.
+Extruded aluminium housing with opal or microprismatic diffuser.
+
+
+ORDER CODE STRUCTURE
+-------------------------------------------------------------
+VA-ORL-[length]-[CCT]-[CRI]-[control]
+
+  length    1200 = 1200mm
+  CCT       27 = 2700K   30 = 3000K   35 = 3500K   40 = 4000K
+  CRI       80 = Ra80    90 = Ra90
+  control   ON/OFF | DALI | 010V
+
+
+PHOTOMETRIC DATA — 1200mm, Ra90
+-------------------------------------------------------------
+  CCT          Luminaire flux      Circuit power     Efficacy
+  2700 K          3180 lm              32 W          99 lm/W
+  3000 K          3290 lm              32 W         103 lm/W
+  3500 K          3410 lm              32 W         107 lm/W
+  4000 K          3520 lm              32 W         110 lm/W
+
+Note: Ra80 variants deliver approximately 12% higher flux at the
+same circuit power. Figures above are for Ra90 only.
+
+
+ELECTRICAL
+-------------------------------------------------------------
+Circuit power (system)                  32 W
+LED module power                        28.5 W
+Driver                                  Integral, DALI-2
+Supply                                  220-240 V AC 50/60 Hz
+Power factor                            > 0.95
+
+
+PERFORMANCE
+-------------------------------------------------------------
+Beam distribution                       120 degrees
+Ingress protection                      IP40
+Rated life L80/B10                      60000 h
+Warranty                                5 years / 25000 h
+Photobiological safety                  RG0
+
+
+Vantage Architectural Lighting. E&OE.
