@@ -727,3 +727,127 @@ each change cost a session. The target is now correct — hold it still.
 ### Status
 
 **Week 1 complete. 9/9 on the gate.**
+
+---
+
+## DAY 8 — Range constraints, and a real model failure
+
+**Date:** 19 August 2026
+**Model:** `gemini-3.6-flash`
+
+### Project moved to `D:\clause`
+
+Moved from `C:\Users\Admin\clause`. `.git`, `.env` and all source survived.
+
+The virtual environment did **not** — a venv hardcodes its own absolute path,
+so one built at the old location cannot run from the new one. Rebuilt from
+`requirements.txt`.
+
+**Unintended benefit:** this was a genuine reproducibility test. The environment
+rebuilt cleanly from `requirements.txt` on a different drive, which means the
+repo really is reproducible from a clean clone rather than assumed to be.
+
+Also confirmed: `python` is not a command on this machine — the Windows Store
+stub intercepts it. `py` is the launcher. Three cascading errors (`venv` not
+created → `Activate.ps1` missing → `pip` not found) all traced to that one root
+cause.
+
+### FINDING — the schema validated a wattage of 1.8 × 10²⁰¹
+
+On one eval run, E02 — a document that had scored 9/9 an hour earlier on
+identical code — returned:
+
+```
+wattage_w          expected 18      got 1.8e+201
+luminous_flux_lm   expected 1620    got None
+cct_k              expected 3000    got None
+cri                expected 80      got None
+beam_angle_deg     expected 60      got None
+ip_rating          expected 'IP44'  got None
+lifespan_hours     expected 50000   got None
+dimmable           expected False   got None
+```
+
+Field accuracy for that run: **70.4%**, down from 100%. Ground truth was
+correct. The model produced garbage.
+
+**Nothing caught it, and that is the point.** The schema said:
+
+```python
+wattage_w: Optional[float] = None
+```
+
+"A number, or nothing." `1.8e+201` is a number. `None` is permitted. So Pydantic
+validated the response, the retry never fired, and a completely wrong answer was
+returned as a **perfectly well-formed** one.
+
+> This is the schema-versus-evaluation distinction demonstrated live.
+> **Validation checks shape. Only ground truth catches values.**
+> A response can be structurally flawless and factually worthless.
+
+It also confirms the Day 2 finding on non-determinism, this time with
+consequences: identical input, identical code, 9/9 then 1/9.
+
+### Fix — domain-informed range constraints
+
+Added `ge`/`le` bounds to six numeric fields in `schema.py`:
+
+| Field | Range | Reasoning |
+|---|---|---|
+| `wattage_w` | 0 – 2,000 | Downlight through large floodlight |
+| `luminous_flux_lm` | 0 – 200,000 | High bay / stadium at the top end |
+| `cct_k` | 1,000 – 10,000 | Below ~1800K and above ~6500K is exotic |
+| `cri` | 0 – 100 | **Physically bounded** — CRI cannot exceed 100 |
+| `beam_angle_deg` | 0 – 360 | |
+| `lifespan_hours` | 0 – 500,000 | |
+
+Bounds err deliberately **wide**. Rejecting a legitimate datasheet is worse than
+accepting an absurd value, so the limits are generous rather than tight.
+
+Field descriptions were also updated to state the range in prose, since
+descriptions are sent to the model as part of the schema.
+
+**Effect:** an out-of-range value now raises `ValidationError`, which triggers
+the retry built on Day 2 with the error fed back to the model. That machinery
+had sat idle for six days because nothing had ever failed validation.
+
+### Note on how the constraints render
+
+Because the fields are `Optional[int]`, Pydantic emits the bounds nested inside
+an `anyOf` rather than at the top level:
+
+```json
+"cri": {
+  "anyOf": [{"type": "integer", "maximum": 100, "minimum": 0},
+            {"type": "null"}],
+  "description": "... Must be between 0 and 100 ..."
+}
+```
+
+Whether Gemini honours constraints nested this deep is unverified. **The
+protective half is unaffected** — Pydantic enforces the bounds in Python
+regardless of how the JSON schema renders. The description, which sits
+unnested at field level, states the limits in prose either way.
+
+### Variance check — 3 consecutive runs
+
+All three runs after the change: **27/27, 100%.**
+
+**What this does NOT prove.** The `1.8e+201` event was a single occurrence. Three
+clean runs afterwards do not establish that the bounds caused the improvement,
+because the base rate of that failure is unknown — it may simply not have
+recurred. With n=1 failure there is no way to separate "the fix worked" from
+"the glitch was rare".
+
+**What can honestly be claimed:** the bounds now reject that class of value if it
+recurs, and the retry has a chance to recover. Whether it recurs is an open
+question requiring many more runs than three.
+
+Recording this distinction because the tempting version — *"I found a bug and
+fixed it, 70% → 100%"* — is not supported by the evidence.
+
+### Status
+
+Day 8 in progress. Schema hardened. Variance across 3 runs: none observed.
+
+**Next:** grow the eval set, then the Day 9 ablation.
