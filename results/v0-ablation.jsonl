@@ -1,0 +1,7 @@
+{"id": "e01", "correct_fields": 9, "total_fields": 9, "latency_ms": 7300, "cost_usd": 0.0004558}
+{"id": "e02", "correct_fields": 9, "total_fields": 9, "latency_ms": 24647, "cost_usd": 0.00038100000000000005}
+{"id": "e03", "correct_fields": 9, "total_fields": 9, "latency_ms": 6220, "cost_usd": 0.0003595}
+{"id": "e04", "correct_fields": 9, "total_fields": 9, "latency_ms": 20993, "cost_usd": 0.0004216}
+{"id": "e05", "correct_fields": 8, "total_fields": 9, "latency_ms": 22921, "cost_usd": 0.0005003000000000001}
+{"id": "e06", "correct_fields": 8, "total_fields": 9, "latency_ms": 32888, "cost_usd": 0.0004459}
+{"id": "e07", "correct_fields": 9, "total_fields": 9, "latency_ms": 7798, "cost_usd": 0.0004411}

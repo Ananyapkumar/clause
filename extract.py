@@ -8,6 +8,7 @@ Or import:      from extract import extract
 """
 
 import json
+import os
 import re
 import time
 from datetime import datetime, timezone
@@ -18,11 +19,19 @@ from dotenv import load_dotenv
 from google import genai
 from pydantic import BaseModel, ValidationError
 
-from schema import LightingDatasheet
+from schema import LightingDatasheet, build_json_schema
 
 load_dotenv()
 
-MODEL = "gemini-3.6-flash"
+# MODEL is read from .env so it can be changed without editing code.
+# Add a line to .env:   GEMINI_MODEL=gemini-2.5-flash-lite
+# The fallback is used when that line is absent.
+#
+# Free-tier daily quotas differ enormously between models - Flash was cut
+# to 20 requests/day, while Flash-Lite has historically allowed far more.
+# Since every result is tagged with the model that produced it, switching
+# is safe as long as comparisons are made within a single model.
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 MAX_ATTEMPTS = 3
 LOG_FILE = "requests.jsonl"
 
@@ -60,26 +69,57 @@ class ExtractionRun(BaseModel):
 client = genai.Client()
 
 
-# The prompt carries the schema decisions explicitly. The model cannot
-# guess that "system wattage" beats "LED load" - it has to be told, and
-# the same rule has to hold in the ground truth.
-INSTRUCTIONS = """Extract the specified fields from this lighting product datasheet.
+# =============================================================
+# THE PROMPT - split in two, so the domain rules can be removed
+# =============================================================
+# The central claim of this project is:
+#
+#   "Encoding domain disambiguation rules explicitly in the prompt is
+#    sufficient for the model to navigate traps it would otherwise
+#    fall into."
+#
+# On Day 6 the model scored 9/9 on E01, a document containing four
+# deliberate traps. That looked like evidence. It was not, because there
+# was no control - the model may have succeeded BECAUSE the rules were
+# present, or it may have succeeded anyway. Nothing distinguished those.
+#
+# So the prompt is split. GENERIC_RULES are formatting instructions any
+# extraction task would need. DOMAIN_RULES are the lighting judgements
+# that came from a domain expert. Running with and without DOMAIN_RULES
+# measures what the domain knowledge is worth, in accuracy points.
 
-RULES:
-- wattage_w must be SYSTEM wattage (total power draw including driver
+BASE_INSTRUCTION = "Extract the specified fields from this lighting product datasheet."
+
+# Formatting only. No lighting knowledge. Present in BOTH conditions,
+# so the ablation isolates domain knowledge rather than also removing
+# instructions about output format.
+GENERIC_RULES = """- Numbers must be bare: 4940, not "4,940" and not "4940 lm".
+- If a value is genuinely absent from the document, return null.
+  Do not infer, calculate, or estimate it."""
+
+# The variable under test. Every line here is a lighting-industry
+# judgement that the model cannot be assumed to know.
+DOMAIN_RULES = """- wattage_w must be SYSTEM wattage (total power draw including driver
   losses). If the datasheet also gives LED load or LED module power,
   do NOT use that.
 - luminous_flux_lm must be LUMINAIRE output, not bare LED module output.
 - lifespan_hours must be the L80/B10 rated life. Do NOT use the warranty
   period, even if warranty hours are stated more prominently.
-- Numbers must be bare: 4940, not "4,940" and not "4940 lm".
-- If a value is genuinely absent from the document, return null.
-  Do not infer, calculate, or estimate it.
 - Efficacy figures (lm/W) are NOT wattage and NOT flux. Ignore them
-  unless you are certain which field they belong to.
+  unless you are certain which field they belong to."""
 
-DATASHEET:
-"""
+
+def build_instructions(use_domain_rules: bool = True) -> str:
+    """Assemble the prompt. Set use_domain_rules=False for the ablation."""
+    rules = GENERIC_RULES
+    if use_domain_rules:
+        rules = DOMAIN_RULES + "\n" + GENERIC_RULES
+
+    return f"{BASE_INSTRUCTION}\n\nRULES:\n{rules}\n\nDATASHEET:\n"
+
+
+# Kept so existing callers still work.
+INSTRUCTIONS = build_instructions(use_domain_rules=True)
 
 
 def _seconds_to_wait(message: str, default: float = 60.0) -> float:
@@ -108,9 +148,18 @@ def estimate_cost(input_tokens: int, output_tokens: int) -> float:
     )
 
 
-def extract(text: str, max_attempts: int = MAX_ATTEMPTS) -> ExtractionRun:
-    """Run one datasheet through the model. Never raises - returns a run."""
-    base_prompt = INSTRUCTIONS + text
+def extract(
+    text: str,
+    max_attempts: int = MAX_ATTEMPTS,
+    use_domain_rules: bool = True,
+) -> ExtractionRun:
+    """Run one datasheet through the model. Never raises - returns a run.
+
+    use_domain_rules=False removes the lighting-specific disambiguation
+    rules from the prompt. That is the ablation: the difference in score
+    between the two conditions is what the domain knowledge is worth.
+    """
+    base_prompt = build_instructions(use_domain_rules) + text
     last_error = None
 
     started = time.perf_counter()
@@ -148,7 +197,10 @@ def extract(text: str, max_attempts: int = MAX_ATTEMPTS) -> ExtractionRun:
                     response_format={
                         "type": "text",
                         "mime_type": "application/json",
-                        "schema": LightingDatasheet.model_json_schema(),
+                        # Domain guidance lives in the field descriptions too,
+                        # so the ablation must strip those as well as the
+                        # prompt rules - otherwise it removes nothing.
+                        "schema": build_json_schema(use_domain_rules),
                     },
                 )
                 break                       # success - leave the retry loop

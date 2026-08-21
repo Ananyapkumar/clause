@@ -1,0 +1,44 @@
+{
+  "version": "v0-ablation",
+  "domain_rules_in_prompt": false,
+  "run_at": "2026-08-20T16:21:17.272416+00:00",
+  "model": "gemini-3.6-flash",
+  "summary": {
+    "documents": 7,
+    "field_accuracy": 0.9683,
+    "fully_correct_docs": 0.7143,
+    "per_field": {
+      "model_number": 1.0,
+      "wattage_w": 1.0,
+      "luminous_flux_lm": 1.0,
+      "cct_k": 1.0,
+      "cri": 1.0,
+      "beam_angle_deg": 1.0,
+      "ip_rating": 1.0,
+      "lifespan_hours": 0.8571,
+      "dimmable": 0.8571
+    }
+  },
+  "failures": [
+    {
+      "id": "e05",
+      "mismatches": [
+        {
+          "field": "dimmable",
+          "expected": false,
+          "got": true
+        }
+      ]
+    },
+    {
+      "id": "e06",
+      "mismatches": [
+        {
+          "field": "lifespan_hours",
+          "expected": 75000,
+          "got": 100000
+        }
+      ]
+    }
+  ]
+}

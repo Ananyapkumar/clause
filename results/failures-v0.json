@@ -1,0 +1,34 @@
+{
+  "version": "v0",
+  "domain_rules_in_prompt": true,
+  "run_at": "2026-08-20T16:09:13.912786+00:00",
+  "model": "gemini-3.6-flash",
+  "summary": {
+    "documents": 7,
+    "field_accuracy": 0.9841,
+    "fully_correct_docs": 0.8571,
+    "per_field": {
+      "model_number": 1.0,
+      "wattage_w": 1.0,
+      "luminous_flux_lm": 1.0,
+      "cct_k": 1.0,
+      "cri": 1.0,
+      "beam_angle_deg": 1.0,
+      "ip_rating": 1.0,
+      "lifespan_hours": 1.0,
+      "dimmable": 0.8571
+    }
+  },
+  "failures": [
+    {
+      "id": "e05",
+      "mismatches": [
+        {
+          "field": "dimmable",
+          "expected": false,
+          "got": true
+        }
+      ]
+    }
+  ]
+}

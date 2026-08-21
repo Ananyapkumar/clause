@@ -20,10 +20,22 @@ from pathlib import Path
 from extract import MODEL, extract
 from schema import FIELDS
 
+import sys
+
+# ABLATION SWITCH
+#
+#   py evaluate.py                     domain rules IN prompt   -> v0
+#   py evaluate.py --no-domain-rules   domain rules REMOVED     -> v0-ablation
+#
+# The difference between the two scores is what the lighting domain
+# knowledge is worth, measured in accuracy points. Without this control
+# a high score is unfalsifiable - the model might have succeeded anyway.
+USE_DOMAIN_RULES = "--no-domain-rules" not in sys.argv
+
 DOCS_DIR = Path("evals/documents")
 TRUTH_DIR = Path("evals/ground_truth")
 RESULTS_DIR = Path("results")
-VERSION = "v0"
+VERSION = "v0" if USE_DOMAIN_RULES else "v0-ablation"
 
 # Which fields are which type. Used to validate the ground truth, not just
 # the model output - see the type check below.
@@ -159,7 +171,9 @@ if not cases:
     print("No complete cases. Nothing to score.")
     raise SystemExit(1)
 
+condition = "WITH domain rules" if USE_DOMAIN_RULES else "WITHOUT domain rules (ABLATION)"
 print(f"Scoring {len(cases)} case(s) against {MODEL}")
+print(f"Condition: {condition}  ->  results saved as {VERSION}")
 print(f"Budget: this run needs at least {len(cases)} API requests "
       f"(more if any document needs a retry).")
 print(f"Free tier allows 20 per day.\n")
@@ -174,7 +188,7 @@ rows = []
 failures = []
 
 for case in cases:
-    run = extract(case["text"])
+    run = extract(case["text"], use_domain_rules=USE_DOMAIN_RULES)
 
     if not run.ok:
         rows.append({"id": case["id"], "correct_fields": 0, "total_fields": len(FIELDS),
@@ -234,7 +248,8 @@ print("-" * 56)
 print(f"  total cost           ${sum(r['cost_usd'] for r in rows):.6f}")
 print(f"  median latency       {statistics.median(r['latency_ms'] for r in rows):.0f} ms")
 print("=" * 56)
-print(f"\n  {len(failures)} case(s) with mismatches -> results/failures.json")
+print(f"\n  {len(failures)} case(s) with mismatches -> "
+      f"results/failures-{VERSION}.json")
 
 RESULTS_DIR.mkdir(exist_ok=True)
 
@@ -242,9 +257,10 @@ with open(RESULTS_DIR / f"{VERSION}.jsonl", "w", encoding="utf-8") as f:
     for row in rows:
         f.write(json.dumps(row) + "\n")
 
-with open(RESULTS_DIR / "failures.json", "w", encoding="utf-8") as f:
+with open(RESULTS_DIR / f"failures-{VERSION}.json", "w", encoding="utf-8") as f:
     json.dump({
         "version": VERSION,
+        "domain_rules_in_prompt": USE_DOMAIN_RULES,
         "run_at": datetime.now(timezone.utc).isoformat(),
         "model": MODEL,
         "summary": {

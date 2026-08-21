@@ -145,3 +145,53 @@ class LightingDatasheet(BaseModel):
 
 # Field names in a fixed order, so every report and comparison lines up.
 FIELDS = list(LightingDatasheet.model_fields.keys())
+
+
+# =============================================================
+# ABLATION SUPPORT
+# =============================================================
+# The first ablation attempt was INVALID. It removed the domain rules from
+# the prompt but left them in the field descriptions above - and those
+# descriptions are sent to the model as part of the JSON schema on every
+# call. So the rules were present in both conditions, and the scores were
+# identical, which is exactly what you would predict from removing nothing.
+#
+# A control that does not control is not a control.
+#
+# These neutral descriptions strip every lighting judgement while keeping
+# enough to identify the field. Formatting guidance stays, because the
+# ablation is testing DOMAIN knowledge, not output format.
+
+NEUTRAL_DESCRIPTIONS = {
+    "model_number": "The product model number or order code, as printed.",
+    "wattage_w": "Power in watts. Bare number, no unit.",
+    "luminous_flux_lm": "Light output in lumens. Bare number, no separators.",
+    "cct_k": "Colour temperature in kelvin. Bare number.",
+    "cri": "Colour rendering index. Bare number.",
+    "beam_angle_deg": "Beam angle in degrees. Bare number.",
+    "ip_rating": "Ingress protection code as printed, e.g. 'IP20'.",
+    "lifespan_hours": "Lifespan in hours. Bare number, no separators.",
+    "dimmable": "true if dimmable, false if not, null if not mentioned.",
+}
+
+
+def build_json_schema(use_domain_rules: bool = True) -> dict:
+    """The JSON schema sent to the model.
+
+    use_domain_rules=False replaces every field description with a neutral
+    one, so the model is told WHICH field to fill but not HOW to resolve
+    the ambiguities a lighting datasheet contains.
+
+    Range constraints are kept in both conditions - they are guardrails
+    against nonsense output, not domain guidance about which figure to pick.
+    """
+    schema = LightingDatasheet.model_json_schema()
+
+    if use_domain_rules:
+        return schema
+
+    for field, neutral in NEUTRAL_DESCRIPTIONS.items():
+        if field in schema.get("properties", {}):
+            schema["properties"][field]["description"] = neutral
+
+    return schema

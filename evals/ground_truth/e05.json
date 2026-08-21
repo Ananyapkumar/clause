@@ -7,5 +7,5 @@
   "beam_angle_deg": 120,
   "ip_rating": "IP40",
   "lifespan_hours": 60000,
-  "dimmable": false
+  "dimmable": true
 }
