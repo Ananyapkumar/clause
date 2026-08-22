@@ -142,9 +142,31 @@ class LightingDatasheet(BaseModel):
         ),
     )
 
+    # CITATIONS - attempt 2, flat list of strings.
+    #
+    # Attempt 1 used a nested Citation model (field + verbatim). That was a
+    # mistake: Pydantic emits nested models as $defs/$ref in the JSON schema,
+    # and the API returned an EMPTY list every time - the model never filled
+    # it. Extraction quality also degraded and cost per document rose 4x.
+    #
+    # A flat list[str] emits no $defs. We lose the field->quote mapping, but
+    # we keep the thing that matters: did the model quote text that actually
+    # exists in the document?
+    citations: list[str] = Field(
+        default_factory=list,
+        description=(
+            "REQUIRED. For each value you extracted, copy the exact line from "
+            "the datasheet you read it from, character for character. One "
+            "string per line quoted, e.g. 'System wattage              18 W'. "
+            "Do not paraphrase or reformat. Never leave this empty."
+        ),
+    )
 
-# Field names in a fixed order, so every report and comparison lines up.
-FIELDS = list(LightingDatasheet.model_fields.keys())
+
+# The nine extracted fields, in a fixed order. Deliberately EXCLUDES
+# 'citations' - that is evidence about the extraction, not an extracted
+# value, and it is not scored against ground truth.
+FIELDS = [f for f in LightingDatasheet.model_fields if f != "citations"]
 
 
 # =============================================================
@@ -163,6 +185,10 @@ FIELDS = list(LightingDatasheet.model_fields.keys())
 # ablation is testing DOMAIN knowledge, not output format.
 
 NEUTRAL_DESCRIPTIONS = {
+    "citations": (
+        "One entry per non-null field, containing the exact source text you "
+        "read that value from, copied character for character."
+    ),
     "model_number": "The product model number or order code, as printed.",
     "wattage_w": "Power in watts. Bare number, no unit.",
     "luminous_flux_lm": "Light output in lumens. Bare number, no separators.",
@@ -175,7 +201,10 @@ NEUTRAL_DESCRIPTIONS = {
 }
 
 
-def build_json_schema(use_domain_rules: bool = True) -> dict:
+def build_json_schema(
+    use_domain_rules: bool = True,
+    use_citations: bool = False,
+) -> dict:
     """The JSON schema sent to the model.
 
     use_domain_rules=False replaces every field description with a neutral
@@ -186,6 +215,23 @@ def build_json_schema(use_domain_rules: bool = True) -> dict:
     against nonsense output, not domain guidance about which figure to pick.
     """
     schema = LightingDatasheet.model_json_schema()
+
+    # CITATIONS ARE OFF BY DEFAULT - Day 10 finding.
+    #
+    # Asking the model to extract AND quote its sources measurably degraded
+    # extraction on complex documents:
+    #
+    #   E02 (simple)          9/9 fields, 9/9 citations verified, 0% hallucination
+    #   E01 (complex, traps)  1/9 fields, 0 citations, wattage_w = 1500.0000000000002
+    #
+    # E01's wattage error appeared in all three citation runs and never
+    # before. The mechanism works; the cost is unacceptable on hard inputs.
+    #
+    # Enable with:  py evaluate.py --with-citations
+    if not use_citations:
+        schema.get("properties", {}).pop("citations", None)
+        if "required" in schema:
+            schema["required"] = [r for r in schema["required"] if r != "citations"]
 
     if use_domain_rules:
         return schema

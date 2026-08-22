@@ -32,6 +32,21 @@ import sys
 # a high score is unfalsifiable - the model might have succeeded anyway.
 USE_DOMAIN_RULES = "--no-domain-rules" not in sys.argv
 
+# REQUEST BUDGET GUARD
+#
+#   py evaluate.py --limit 2    score only the first 2 documents
+#
+# Free tier is 20 requests/day and a full run costs 7. When you only need
+# to check that a change works, spend 2 requests instead of 7.
+# NOTE: a limited run is NOT a baseline. Never publish a --limit score.
+LIMIT = None
+if "--limit" in sys.argv:
+    LIMIT = int(sys.argv[sys.argv.index("--limit") + 1])
+
+# CITATIONS - off by default. See the Day 10 finding in schema.py.
+#   py evaluate.py --with-citations
+USE_CITATIONS = "--with-citations" in sys.argv
+
 DOCS_DIR = Path("evals/documents")
 TRUTH_DIR = Path("evals/ground_truth")
 RESULTS_DIR = Path("results")
@@ -171,6 +186,10 @@ if not cases:
     print("No complete cases. Nothing to score.")
     raise SystemExit(1)
 
+if LIMIT:
+    cases = cases[:LIMIT]
+    print(f"*** LIMITED RUN: first {LIMIT} case(s) only. Not a baseline. ***\n")
+
 condition = "WITH domain rules" if USE_DOMAIN_RULES else "WITHOUT domain rules (ABLATION)"
 print(f"Scoring {len(cases)} case(s) against {MODEL}")
 print(f"Condition: {condition}  ->  results saved as {VERSION}")
@@ -187,8 +206,14 @@ per_field_hits = {f: 0 for f in FIELDS}
 rows = []
 failures = []
 
+# Citation totals across the whole run - Day 10.
+cite_total = 0
+cite_verified = 0
+cite_problems = []
+
 for case in cases:
-    run = extract(case["text"], use_domain_rules=USE_DOMAIN_RULES)
+    run = extract(case["text"], use_domain_rules=USE_DOMAIN_RULES,
+                  use_citations=USE_CITATIONS)
 
     if not run.ok:
         rows.append({"id": case["id"], "correct_fields": 0, "total_fields": len(FIELDS),
@@ -211,16 +236,36 @@ for case in cases:
         else:
             mismatches.append({"field": field, "expected": want, "got": got})
 
+    # Citation totals for this document.
+    cite_total += run.citations_total
+    cite_verified += run.citations_verified
+    if run.citations_unverified or run.citations_total == 0:
+        cite_problems.append({
+            "id": case["id"],
+            "fields_filled": run.fields_filled,
+            "citations_returned": run.citations_total,
+            "unverified_citations": run.citations_unverified,
+        })
+
     rows.append({"id": case["id"], "correct_fields": correct, "total_fields": len(FIELDS),
-                 "latency_ms": run.latency_ms, "cost_usd": run.cost_usd})
+                 "latency_ms": run.latency_ms, "cost_usd": run.cost_usd,
+                 "citations_total": run.citations_total,
+                 "citations_verified": run.citations_verified})
 
     if mismatches:
         failures.append({"id": case["id"], "mismatches": mismatches})
 
     mark = "ok  " if correct == len(FIELDS) else "MISS"
-    print(f"  {case['id']}  {mark}  {correct}/{len(FIELDS)} fields  ({run.latency_ms} ms)")
+    cite_note = f"cite {run.citations_verified}/{run.citations_total}"
+    print(f"  {case['id']}  {mark}  {correct}/{len(FIELDS)} fields  "
+          f"{cite_note}  ({run.latency_ms} ms)")
     for m in mismatches:
         print(f"        {m['field']:<18} expected {m['expected']!r:<14} got {m['got']!r}")
+    if run.citations_total == 0 and run.fields_filled > 0:
+        print(f"        [NO CITATIONS AT ALL] {run.fields_filled} field(s) "
+              f"filled, 0 quoted")
+    for u in run.citations_unverified:
+        print(f"        [HALLUCINATED CITATION] {u['verbatim'][:70]!r}")
 
 
 # =============================================================
@@ -244,6 +289,14 @@ for field in FIELDS:
     acc = per_field_hits[field] / n
     bar = "#" * round(acc * 20)
     print(f"    {field:<20} {acc:>6.1%}  {bar}")
+cite_rate = cite_verified / cite_total if cite_total else 0.0
+hallucination_rate = 1 - cite_rate
+if USE_CITATIONS:
+    print("-" * 56)
+    print(f"  citations            {cite_verified}/{cite_total} verified verbatim")
+    print(f"  citation accuracy    {cite_rate:.1%}")
+    print(f"  HALLUCINATION RATE   {hallucination_rate:.1%}   "
+          f"(cited text not found in source)")
 print("-" * 56)
 print(f"  total cost           ${sum(r['cost_usd'] for r in rows):.6f}")
 print(f"  median latency       {statistics.median(r['latency_ms'] for r in rows):.0f} ms")
@@ -268,6 +321,11 @@ with open(RESULTS_DIR / f"failures-{VERSION}.json", "w", encoding="utf-8") as f:
             "field_accuracy": round(field_acc, 4),
             "fully_correct_docs": round(perfect_docs, 4),
             "per_field": {f: round(per_field_hits[f] / n, 4) for f in FIELDS},
+            "citations_total": cite_total,
+            "citations_verified": cite_verified,
+            "citation_accuracy": round(cite_rate, 4),
+            "hallucination_rate": round(hallucination_rate, 4),
         },
         "failures": failures,
+        "citation_problems": cite_problems,
     }, f, indent=2)

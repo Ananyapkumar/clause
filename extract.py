@@ -20,6 +20,7 @@ from google import genai
 from pydantic import BaseModel, ValidationError
 
 from schema import LightingDatasheet, build_json_schema
+from verify import count_filled_fields, verify_citations
 
 load_dotenv()
 
@@ -65,6 +66,13 @@ class ExtractionRun(BaseModel):
     cost_usd: float
     error: Optional[str] = None
 
+    # Citation verification - added Day 10. Costs nothing; it is a string
+    # search against the source document, not another API call.
+    citations_total: int = 0
+    citations_verified: int = 0
+    citations_unverified: list = []
+    fields_filled: int = 0
+
 
 client = genai.Client()
 
@@ -97,6 +105,12 @@ GENERIC_RULES = """- Numbers must be bare: 4940, not "4,940" and not "4940 lm".
 - If a value is genuinely absent from the document, return null.
   Do not infer, calculate, or estimate it."""
 
+# Only added when citations are switched on. Kept separate so the default
+# prompt is exactly what produced the 98.4% baseline.
+CITATION_RULE = """- For EVERY value you extract, add the exact line from the datasheet you
+  read it from to citations, copied character for character. Never leave
+  citations empty."""
+
 # The variable under test. Every line here is a lighting-industry
 # judgement that the model cannot be assumed to know.
 DOMAIN_RULES = """- wattage_w must be SYSTEM wattage (total power draw including driver
@@ -109,11 +123,20 @@ DOMAIN_RULES = """- wattage_w must be SYSTEM wattage (total power draw including
   unless you are certain which field they belong to."""
 
 
-def build_instructions(use_domain_rules: bool = True) -> str:
-    """Assemble the prompt. Set use_domain_rules=False for the ablation."""
+def build_instructions(
+    use_domain_rules: bool = True,
+    use_citations: bool = False,
+) -> str:
+    """Assemble the prompt.
+
+    use_domain_rules=False  -> the ablation
+    use_citations=True      -> ask for source quotes (degrades hard documents)
+    """
     rules = GENERIC_RULES
     if use_domain_rules:
         rules = DOMAIN_RULES + "\n" + GENERIC_RULES
+    if use_citations:
+        rules = rules + "\n" + CITATION_RULE
 
     return f"{BASE_INSTRUCTION}\n\nRULES:\n{rules}\n\nDATASHEET:\n"
 
@@ -152,6 +175,7 @@ def extract(
     text: str,
     max_attempts: int = MAX_ATTEMPTS,
     use_domain_rules: bool = True,
+    use_citations: bool = False,
 ) -> ExtractionRun:
     """Run one datasheet through the model. Never raises - returns a run.
 
@@ -159,7 +183,7 @@ def extract(
     rules from the prompt. That is the ablation: the difference in score
     between the two conditions is what the domain knowledge is worth.
     """
-    base_prompt = build_instructions(use_domain_rules) + text
+    base_prompt = build_instructions(use_domain_rules, use_citations) + text
     last_error = None
 
     started = time.perf_counter()
@@ -200,7 +224,7 @@ def extract(
                         # Domain guidance lives in the field descriptions too,
                         # so the ablation must strip those as well as the
                         # prompt rules - otherwise it removes nothing.
-                        "schema": build_json_schema(use_domain_rules),
+                        "schema": build_json_schema(use_domain_rules, use_citations),
                     },
                 )
                 break                       # success - leave the retry loop
@@ -241,6 +265,12 @@ def extract(
 
         try:
             result = LightingDatasheet.model_validate_json(interaction.output_text)
+
+            # CITATION CHECK - no API call, just a string search against the
+            # source document. Free, and it runs on every extraction.
+            check = verify_citations(text, result.citations)
+            filled = count_filled_fields(result.model_dump())
+
             return ExtractionRun(
                 ok=True,
                 result=result,
@@ -249,6 +279,10 @@ def extract(
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 cost_usd=estimate_cost(input_tokens, output_tokens),
+                citations_total=check["total_citations"],
+                citations_verified=check["verified"],
+                citations_unverified=check["unverified_details"],
+                fields_filled=filled,
             )
         except ValidationError as err:
             last_error = str(err)

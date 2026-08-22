@@ -1,7 +1,2 @@
-{"id": "e01", "correct_fields": 9, "total_fields": 9, "latency_ms": 23256, "cost_usd": 0.0004933}
-{"id": "e02", "correct_fields": 9, "total_fields": 9, "latency_ms": 26528, "cost_usd": 0.00041850000000000004}
-{"id": "e03", "correct_fields": 9, "total_fields": 9, "latency_ms": 9753, "cost_usd": 0.000397}
-{"id": "e04", "correct_fields": 9, "total_fields": 9, "latency_ms": 7272, "cost_usd": 0.00045910000000000005}
-{"id": "e05", "correct_fields": 8, "total_fields": 9, "latency_ms": 9749, "cost_usd": 0.0005378000000000001}
-{"id": "e06", "correct_fields": 9, "total_fields": 9, "latency_ms": 7511, "cost_usd": 0.00048090000000000003}
-{"id": "e07", "correct_fields": 9, "total_fields": 9, "latency_ms": 26795, "cost_usd": 0.00047860000000000003}
+{"id": "e01", "correct_fields": 1, "total_fields": 9, "latency_ms": 17112, "cost_usd": 0.00040839999999999995, "citations_total": 0, "citations_verified": 0}
+{"id": "e02", "correct_fields": 9, "total_fields": 9, "latency_ms": 11122, "cost_usd": 0.0007686, "citations_total": 9, "citations_verified": 9}
