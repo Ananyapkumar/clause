@@ -256,12 +256,13 @@ for case in cases:
         failures.append({"id": case["id"], "mismatches": mismatches})
 
     mark = "ok  " if correct == len(FIELDS) else "MISS"
-    cite_note = f"cite {run.citations_verified}/{run.citations_total}"
+    cite_note = f"cite {run.citations_verified}/{run.citations_total}  " if USE_CITATIONS else ""
     print(f"  {case['id']}  {mark}  {correct}/{len(FIELDS)} fields  "
-          f"{cite_note}  ({run.latency_ms} ms)")
+          f"{cite_note}({run.latency_ms} ms)")
     for m in mismatches:
         print(f"        {m['field']:<18} expected {m['expected']!r:<14} got {m['got']!r}")
-    if run.citations_total == 0 and run.fields_filled > 0:
+    # Only complain about missing citations when citations were asked for.
+    if USE_CITATIONS and run.citations_total == 0 and run.fields_filled > 0:
         print(f"        [NO CITATIONS AT ALL] {run.fields_filled} field(s) "
               f"filled, 0 quoted")
     for u in run.citations_unverified:

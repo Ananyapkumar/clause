@@ -1009,3 +1009,240 @@ quota resets.
 **Blocked on:** free-tier quota reset for the confirming 7-document run.
 **Next:** Day 9 ablation — remove the domain rules from the prompt, re-run,
 measure the drop. Two runs, 14 requests, one full day of quota.
+
+---
+
+## DAY 9 — Ablation: what are the domain rules worth?
+
+**The claim under test:** encoding lighting-specific disambiguation rules in
+the prompt is what lets the model navigate traps it would otherwise fall into.
+
+### The first ablation was invalid
+
+Removing the rules from the prompt changed nothing — 98.4% in both conditions,
+identical single miss.
+
+That looked like a null result. It was a broken experiment. **The domain rules
+existed in two places**: the prompt, and the `description` on every schema
+field. Field descriptions are sent to the model as part of the JSON schema on
+every call. Only one copy was removed.
+
+> A control that does not control is not a control.
+
+Identical scores are exactly what removing nothing predicts.
+
+### The corrected ablation
+
+Rebuilt so the ablation strips *both* the prompt rules and the domain content
+in the field descriptions, replacing the latter with neutral text
+(*"Power in watts"* rather than *"SYSTEM wattage — NOT the LED load"*).
+Range constraints stay in both conditions — they are guardrails against
+nonsense, not guidance about which figure to pick.
+
+### Result
+
+| | With domain rules | Without |
+|---|---|---|
+| Field accuracy | 62/63 | **61/63** |
+| E06 `lifespan_hours` | **75000** ✓ | **100000** ✗ |
+
+**One field flipped, and it flipped on exactly the field the removed rule
+governs.**
+
+E06 states lifespan three ways: a marketing banner claiming 100,000 hours,
+`Rated life L80/B10 75000 h`, and `Rated life L70/B50 100000 h`. **Two of the
+three point at 100,000.** With the rule, the model took 75,000. Without it, it
+took the number the document pushes hardest.
+
+Not a random field breaking — the predicted field, in the predicted direction,
+for the predicted reason.
+
+**Effect size is small and should be reported as such: 1 field in 63, 1.6
+percentage points.** Most datasheet fields are unambiguous and the model reads
+them correctly unaided. The rules matter only where the document actively
+misleads. That is a more useful finding than a collapse would have been: domain
+knowledge is not needed everywhere, it is needed at the specific points where a
+datasheet is misleading — and knowing *where* those points are is the expertise.
+
+**Caveat: n=1 run per condition.** Direction and location raise confidence
+considerably — random variance would not preferentially hit `lifespan_hours` on
+E06 — but one paired run is not proof. Three runs per condition would cost 42
+requests, or two full days of free-tier quota. Not spent.
+
+---
+
+## DAY 10 — Citation verification: built, measured, not adopted
+
+**Goal:** make the model quote its source for each value, then check
+programmatically that the quote exists in the document. A value that is right
+but sourced from invented text is not a value you can trust.
+
+### Attempt 1 — nested model. Failed.
+
+Used a nested `Citation` model (`field` + `verbatim`). Pydantic renders nested
+models as `$defs`/`$ref` in JSON schema. The API returned an **empty list every
+time**.
+
+This was a known risk that I had already avoided once — `Literal` was chosen
+over `Enum` on Day 5 specifically to prevent `$defs` generation — and then
+reintroduced without checking.
+
+It also made everything worse: cost per document 13× higher, latency 2×.
+
+### Attempt 2 — flat `list[str]`. Works, but breaks hard documents.
+
+No nesting, no `$defs`. Results:
+
+| | E02 (simple) | E01 (complex, 4 traps) |
+|---|---|---|
+| Fields correct | 9/9 | **1/9** |
+| Citations | 9/9 verified, 0% hallucination | **0 returned** |
+| `wattage_w` | correct | **1500.0000000000002** |
+
+The `wattage_w` ×10 error on E01 appeared in **all three** citation runs and
+never once in the twelve runs before.
+
+### FINDING — asking a model to extract *and* justify is not free
+
+On simple input the cost is invisible. On hard input it collapses the primary
+task. The mechanism works; the trade is bad.
+
+**Decision: citations are opt-in, default off** (`--with-citations`). The
+default prompt and schema are byte-for-byte what produced the baseline.
+
+**The correct architecture is two calls** — extract, then cite separately, each
+doing one job. Not implemented: it doubles request count, and the free tier
+allows 20/day. It belongs in "what I'd do next".
+
+---
+
+## DAY 11 — Eval set 7 → 12 documents
+
+Five new fictional datasheets, each targeting a specific failure mode:
+
+| Case | Type | Tests |
+|---|---|---|
+| e08 | Baseline | Track spot, clean |
+| e09 | Baseline | Terse labels — `Wattage`, `Output`, `Lifetime`. No "system", no "L80/B10". |
+| e10 | **Hard** | Flux split direct/indirect/total, module gross stated separately, circuit vs LED board power, L80/B10 *and* L90/B10, warranty in hours |
+| e11 | **Hard** | Revision note: superseded figures printed on the page and explicitly withdrawn |
+| e12 | **Adversarial** | Danish/English bilingual, every label duplicated |
+
+### Result — 108/108, 100%
+
+All twelve documents, all nine fields.
+
+**Including both hard cases.** E10: took circuit power over LED board power, and
+total luminaire flux over both module gross and direct-only. E11: took the
+Revision 4 values and ignored the withdrawn Revision 3 figures printed directly
+above them.
+
+### The problem with 100%
+
+From the original plan's Day 14 criterion:
+
+> *"Your eval set includes cases you expect to fail. If every case passes, the
+> set is too easy and useless."*
+
+**A flat 100% means the eval set is not discriminating.** It also blocks the
+Day 30 gate item requiring documented improvement across three versions — there
+is nothing to improve from.
+
+Whole-document extraction at 100% is best understood as a **ceiling**:
+$0.00046/document, 14 s median latency, everything in the prompt. Retrieval will
+be cheaper and worse. **That tradeoff is the story, not the 100%.**
+
+### One ground-truth error caught
+
+Labelled E10 `lifespan_hours` as 35000 — the L90/B10 figure. The documented
+rule is L80/B10, which is 60000. Corrected.
+
+Worth noting because every previous answer-key defect was mechanical (quotes,
+units, missing keys). This one was a **judgement** error, made by the domain
+expert, caught by re-reading against the written rule. The rule existing in
+`schema.py` is what made it catchable.
+
+---
+
+## DAY 12 — Chunking, embeddings, local vector search
+
+**Cost: $0. API requests: 0.** ChromaDB and sentence-transformers, both running
+locally. `all-MiniLM-L6-v2`, ~90 MB downloaded once, then offline. No account,
+no key, no Docker.
+
+Deliberately **no LLM in the loop** — measuring retrieval on its own tells you
+whether a failure is a retrieval problem or a generation problem. Almost
+everyone skips this and then spends weeks tuning prompts to fix a retriever.
+
+### FINDING 1 — right document, wrong chunk
+
+Query: *"system wattage of the track spot"*
+
+Top hit: `e08::0` — the correct document, but the **header chunk**. It matched
+on the product title (`AXIS TRACK SPOT — 24W`), not the specification line
+`System power 24 W`, which sits in a later chunk.
+
+Ranks 2 and 3 were a completely different product.
+
+**Retrieving the right document is not the same as retrieving the right chunk.**
+A system that stops at document-level retrieval looks like it is working.
+
+### FINDING 2 — semantic search cannot distinguish lifetime standards
+
+Query: *"rated life hours"* — top hit `e10::4`:
+
+```
+Rated life L90/B10        35000 h
+Product warranty          5 years (20000 h)
+Ingress protection        IP40
+```
+
+**The chunk returned contains the two WRONG lifetime figures.** The correct
+`Rated life L80/B10 60000 h` line is in a different chunk and was not returned.
+
+To an embedding model, "L80/B10", "L90/B10" and "warranty" are near-identical
+strings in near-identical contexts. It has no way to know that one is the
+answer and the other two are traps.
+
+**This is the same domain ambiguity the Day 9 rules were written for, appearing
+one layer earlier.** Prompt-level rules cannot fix it, because the correct text
+never reaches the prompt.
+
+**Consequence:** retrieval needs domain awareness too — metadata filtering,
+field-specific queries, or a reranker that knows L80/B10 outranks L90/B10 for
+this field. Prompt engineering alone is not a fix.
+
+### FINDING 3 — chunk boundaries split label from value
+
+Query: *"is it dimmable"*
+
+- Rank 1 — `e11::2`, ends immediately **before** the dimming line
+- Rank 3 — `e11::3`, **starts with** `Dimming Not dimmable`
+
+The answer is at rank 3; rank 1 is the chunk that stops one line short. At
+`k=1` this returns confidently wrong context. Line-based chunking with overlap
+reduced this but did not eliminate it.
+
+### FINDING 4 — distance is a usable quality signal
+
+| Query | Top distance | Quality |
+|---|---|---|
+| "ingress protection rating" | **0.847** | Exact phrase present. Correct. |
+| "system wattage of the track spot" | 1.081 | Right document, wrong chunk |
+| "rated life hours" | 1.142 | Wrong figures returned |
+| "is it dimmable" | 1.159 | Answer at rank 3 |
+
+Every good result sat below ~0.9; every poor one above ~1.05. **Distance is
+usable as a confidence threshold** — below which a result is trustworthy, above
+which the system should widen `k` or refuse.
+
+Note: ChromaDB returns **distance, not similarity**. Lower is closer. Reading it
+backwards is an easy way to conclude a working retriever is broken.
+
+### Status
+
+Retrieval indexed and searchable, locally, at zero cost. Four failure modes
+documented before a single LLM call was made against it.
+
+**Next:** Day 13 — wire retrieval into extraction, run the eval, and get the
+first number that is not 100%.

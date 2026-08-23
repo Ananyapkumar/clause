@@ -1,0 +1,43 @@
+CALDERA LIGHTING GROUP
+Product Sheet — Revision 4
+
+
+TERRA INGROUND UPLIGHT
+Order code: CL-TER-IG-9-30-15
+
+
+Drive-over rated inground luminaire for landscape and
+facade illumination. 316 stainless bezel.
+
+
+NOTE ON THIS REVISION
+----------------------------------------------------------
+Revision 3 of this sheet listed the system wattage as 12 W
+and the output as 1000 lm. Those figures were for the
+superseded LED board and are WITHDRAWN. The values in the
+table below are correct for all units shipped after the
+revision date.
+
+
+CURRENT SPECIFICATION (Revision 4)
+----------------------------------------------------------
+System wattage                            9 W
+Luminaire output                          860 lm
+Colour temperature                        3000 K
+Colour rendering index                    Ra 80
+Beam angle                                15 degrees
+Ingress protection                        IP67
+Impact resistance                         IK10
+Rated life L80/B10                        50000 h
+Dimming                                   Not dimmable
+Load rating                               2000 kg drive-over
+
+
+INSTALLATION
+----------------------------------------------------------
+Sleeve                                    CL-TER-SL-100 (order separately)
+Cable                                     2m H07RN-F pre-wired
+Minimum burial depth                      140 mm
+
+
+Caldera Lighting Group. Revision 4 supersedes all earlier issues.

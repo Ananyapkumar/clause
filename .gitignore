@@ -13,3 +13,6 @@ PYTHON_NOTES.md
 # NOTE: results/ is deliberately NOT ignored.
 # Eval scores and failure analysis are portfolio evidence.
 WEEK1_BIBLE.md
+# Vector index - regenerate with `py ingest.py`. Binary, large, and
+# derived from evals/documents/ which IS tracked.
+chroma_db/

@@ -1,0 +1,49 @@
+STRATFORD OPTICS
+Luminaire Specification
+
+
+HALO PENDANT — DIRECT/INDIRECT
+Order reference: SO-HAL-PD-45-35-90-DIM
+
+
+Suspended direct/indirect pendant for open-plan offices.
+Microprismatic lower optic, opal upper.
+
+
+LIGHT OUTPUT
+==========================================================
+  Component            Flux        Share
+  Downward (direct)    3150 lm      70%
+  Upward (indirect)    1350 lm      30%
+  ----------------------------------------
+  Total luminaire      4500 lm     100%
+
+LED module gross output before optical losses:  5200 lm
+
+
+ELECTRICAL
+==========================================================
+Circuit power (system, incl. driver)        45 W
+LED board power                             41 W
+Driver                                      Integral, 0-10V
+Supply                                      220-240V 50/60Hz
+Inrush current                              22 A / 240 us
+
+
+PHOTOMETRIC
+==========================================================
+Colour temperature                          3500 K
+Colour rendering index                      Ra 90
+Beam distribution (direct component)        90 degrees
+Unified glare rating                        UGR < 19
+
+
+LIFETIME AND PROTECTION
+==========================================================
+Rated life L80/B10                          60000 h
+Rated life L90/B10                          35000 h
+Product warranty                            5 years (20000 h)
+Ingress protection                          IP40
+
+
+Stratford Optics Limited. All values nominal at 25 degrees C.

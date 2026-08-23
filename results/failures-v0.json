@@ -1,79 +1,99 @@
 {
   "version": "v0",
   "domain_rules_in_prompt": true,
-  "run_at": "2026-08-22T01:59:29.231148+00:00",
+  "run_at": "2026-08-23T12:47:31.034228+00:00",
   "model": "gemini-3.6-flash",
   "summary": {
-    "documents": 2,
-    "field_accuracy": 0.5556,
-    "fully_correct_docs": 0.5,
+    "documents": 12,
+    "field_accuracy": 1.0,
+    "fully_correct_docs": 1.0,
     "per_field": {
       "model_number": 1.0,
-      "wattage_w": 0.5,
-      "luminous_flux_lm": 0.5,
-      "cct_k": 0.5,
-      "cri": 0.5,
-      "beam_angle_deg": 0.5,
-      "ip_rating": 0.5,
-      "lifespan_hours": 0.5,
-      "dimmable": 0.5
+      "wattage_w": 1.0,
+      "luminous_flux_lm": 1.0,
+      "cct_k": 1.0,
+      "cri": 1.0,
+      "beam_angle_deg": 1.0,
+      "ip_rating": 1.0,
+      "lifespan_hours": 1.0,
+      "dimmable": 1.0
     },
-    "citations_total": 9,
-    "citations_verified": 9,
-    "citation_accuracy": 1.0,
-    "hallucination_rate": 0.0
+    "citations_total": 0,
+    "citations_verified": 0,
+    "citation_accuracy": 0.0,
+    "hallucination_rate": 1.0
   },
-  "failures": [
-    {
-      "id": "e01",
-      "mismatches": [
-        {
-          "field": "wattage_w",
-          "expected": 150,
-          "got": 1500.0000000000002
-        },
-        {
-          "field": "luminous_flux_lm",
-          "expected": 19500,
-          "got": null
-        },
-        {
-          "field": "cct_k",
-          "expected": 4000,
-          "got": null
-        },
-        {
-          "field": "cri",
-          "expected": 90,
-          "got": null
-        },
-        {
-          "field": "beam_angle_deg",
-          "expected": 90,
-          "got": null
-        },
-        {
-          "field": "ip_rating",
-          "expected": "IP65",
-          "got": null
-        },
-        {
-          "field": "lifespan_hours",
-          "expected": 60000,
-          "got": null
-        },
-        {
-          "field": "dimmable",
-          "expected": true,
-          "got": null
-        }
-      ]
-    }
-  ],
+  "failures": [],
   "citation_problems": [
     {
       "id": "e01",
-      "fields_filled": 2,
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e02",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e03",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e04",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e05",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e06",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e07",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e08",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e09",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e10",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e11",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e12",
+      "fields_filled": 9,
       "citations_returned": 0,
       "unverified_citations": []
     }

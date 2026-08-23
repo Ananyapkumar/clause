@@ -1,0 +1,34 @@
+LUMENCORE SYSTEMS
+Product Data Sheet
+
+
+AXIS TRACK SPOT — 24W
+Order code: LC-AXS-24-40-36
+
+
+Three-circuit track-mounted adjustable spotlight for retail
+and gallery applications. 355 degree rotation, 90 degree tilt.
+
+
+PERFORMANCE
+------------------------------------------------------
+System power                      24 W
+Luminaire luminous flux           2760 lm
+Correlated colour temperature     4000 K
+Colour rendering index            Ra 90
+Beam angle                        36 degrees
+Ingress protection                IP20
+Rated life L80/B10                50000 h
+Dimming                           DALI-2
+
+
+MECHANICAL
+------------------------------------------------------
+Head diameter                     78 mm
+Overall length                    195 mm
+Weight                            0.85 kg
+Adapter                           3-circuit, Global standard
+Finish                            Matt black or matt white
+
+
+LumenCore Systems Ltd. E&OE.

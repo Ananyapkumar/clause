@@ -1,0 +1,11 @@
+{
+  "model_number": "SO-HAL-PD-45-35-90-DIM",
+  "wattage_w": 45,
+  "luminous_flux_lm": 4500,
+  "cct_k": 3500,
+  "cri": 90,
+  "beam_angle_deg": 90,
+  "ip_rating": "IP40",
+  "lifespan_hours": 60000,
+  "dimmable": true
+}

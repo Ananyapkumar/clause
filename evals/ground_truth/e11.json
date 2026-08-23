@@ -1,0 +1,11 @@
+{
+  "model_number": "CL-TER-IG-9-30-15",
+  "wattage_w": 9,
+  "luminous_flux_lm": 860,
+  "cct_k": 3000,
+  "cri": 80,
+  "beam_angle_deg": 15,
+  "ip_rating": "IP67",
+  "lifespan_hours": 50000,
+  "dimmable": false
+}

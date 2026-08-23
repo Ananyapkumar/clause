@@ -1,0 +1,11 @@
+{
+  "model_number": "LC-AXS-24-40-36",
+  "wattage_w": 24,
+  "luminous_flux_lm": 2760,
+  "cct_k": 4000,
+  "cri": 90,
+  "beam_angle_deg": 36,
+  "ip_rating": "IP20",
+  "lifespan_hours": 50000,
+  "dimmable": true
+}
