@@ -1246,3 +1246,166 @@ documented before a single LLM call was made against it.
 
 **Next:** Day 13 — wire retrieval into extraction, run the eval, and get the
 first number that is not 100%.
+
+---
+
+## DAY 13 - Retrieval measured, and not adopted
+
+**Date:** 23 August 2026
+**API requests spent: 0.** Deliberately.
+
+### What was built
+
+`retrieve.py` - assembles a document's context from retrieved chunks instead of
+the full text. One query per schema field, restricted to the target document by
+metadata filter, results unioned and reassembled in document order.
+
+Nine queries per document. Embeddings run locally, so the queries are free; the
+only cost would be the API requests to measure accuracy.
+
+`survey_retrieval.py` - measures whether retrieval reduces context, before
+spending anything on measuring whether it reduces accuracy.
+
+### FINDING - retrieval increased context on every document
+
+| Setting | Documents where retrieval sent LESS | Overall change |
+|---|---|---|
+| k=2 chunks per field | **0 of 12** | **+24.7%** |
+| k=1 chunk per field | 3 of 12 | **+3.6%** |
+
+**Two causes.**
+
+**1. The corpus is too small for retrieval to filter anything.** Documents chunk
+into 2-6 pieces. Nine field queries at k=2 request 18 chunks from a pool of 5 -
+so everything is selected. There is nothing to leave out.
+
+**2. Chunk overlap is duplicated on reassembly.** Adjacent chunks share text by
+design. Joining both reproduces the shared region twice. Visible directly in the
+e10 output: `Downward (direct) 3150 lm` appears twice, `LED board power 41 W`
+appears twice.
+
+### Decision: not adopted. No accuracy run.
+
+Retrieval exists to send **less** text. It demonstrably sends more. It has
+already failed on the axis it was supposed to win, and spending 12 API requests
+to measure its accuracy would only confirm a conclusion already established for
+free.
+
+> **Measure the cheap thing first.** Context size costs nothing to check.
+> Accuracy costs quota. Checking in that order is the discipline.
+
+### The honest framing
+
+**Retrieval is the wrong tool at this document size.** These datasheets are
+500-2000 characters and already fit comfortably in context. Retrieval becomes
+correct when documents exceed the context window, or when a corpus is large
+enough that most of it is irrelevant to any given query.
+
+**The crossover was measured rather than assumed.** Most projects add RAG because
+it is expected, observe that it "works," and never check whether it made things
+worse.
+
+### Defect found, worth fixing regardless
+
+Adjacent selected chunks should be **merged** before assembly, not concatenated.
+The current behaviour duplicates every overlap region. That is a real bug in the
+retriever and it would apply at any corpus size.
+
+---
+
+## DAY 14 - Week 2 review
+
+### What Week 2 delivered
+
+| Day | Delivered | Requests |
+|---|---|---|
+| 8 | Range constraints after the schema accepted 1.8e+201. Eval set 3 to 7. Ground-truth type validation. Rate-limit handling. | 14 |
+| 9 | Ablation harness. First attempt invalid, rebuilt. Domain rules cost exactly `lifespan_hours` on E06. | 14 |
+| 10 | Citation verification built, measured, made opt-in after it degraded extraction on hard documents. | 6 |
+| 11 | Eval set 7 to 12 documents, 108 hand-written judgements. **v0 = 100%.** | 12 |
+| 12 | Chunking, embeddings, local vector search. Four retrieval failure modes documented. | 0 |
+| 13 | Retrieval measured and rejected on evidence. | 0 |
+| 14 | This review. | 0 |
+
+**Total spend across Week 2: $0.00.**
+
+### Metrics
+
+| | Value |
+|---|---|
+| Eval set | 12 documents, 108 hand-written judgements |
+| v0 field accuracy | **108/108 (100%)** |
+| Ablation (no domain rules) | 61/63 on the 7-doc set - one field, exactly where the rule applies |
+| Cost per document | ~$0.00046 |
+| Median latency | ~14 s (free tier; includes rate-limit backoff) |
+| Retrieval | Built, measured, **not adopted** |
+| Commits | across 9 distinct days |
+
+### What I can now explain to an interviewer
+
+- Why validation catches shape and only ground truth catches values
+- Why an ablation with the variable present in two places is not a control
+- Why measuring retrieval separately from generation is non-negotiable
+- Why asking a model to extract and cite in one call can degrade extraction
+- Why a 100% score means the instrument has no resolution
+- Why "absent" and "null" must be distinguished in an answer key
+- What my system costs per document and how long it takes
+
+### Honest weaknesses
+
+1. **The eval set is too easy.** 108/108 cannot detect improvement or regression.
+   This is now the highest-priority problem in the project.
+2. **All results are n=1 per condition.** Non-determinism is documented; variance
+   is not quantified.
+3. **Retrieval was rejected without an accuracy measurement.** Justified on
+   evidence, but it is an argument rather than a number.
+4. **Every document is fictional and written by me.** The failure modes tested
+   are the ones anticipated in advance.
+5. **E02 and E03 ground truth was assisted.** Cannot be cited as expert-written.
+   E01 and E04-E12 are unassisted.
+
+### The pattern worth naming
+
+Week 2's most valuable output was **three decisions not to build something**:
+citations not adopted by default, retrieval not adopted, repeat runs not spent.
+
+Each was a measured decision with a stated reason, not an omission. **A portfolio
+that shows what was rejected and why is stronger than one that shows only what
+was added** - anyone can add a feature; deciding against one on evidence is the
+harder signal.
+
+---
+
+## DAY 15 - Failure analysis
+
+Written to `FAILURE_ANALYSIS.md`. Twelve distinct failure modes across four
+categories:
+
+| Category | Modes | Active | Resolved |
+|---|---|---|---|
+| A - Extraction | 3 | 0 | 3 |
+| B - Retrieval | 4 | 4 | not adopted |
+| C - Measurement | 4 | 0 | 4 |
+| D - Eval design | 1 | **1** | 0 |
+
+**The one active unresolved failure: the eval set is too easy.**
+
+### The finding that carries the document
+
+Three consecutive sessions produced a wrong score because of a defect in the
+**answer key**, not in the system being measured. In every case the model was
+correct and the measurement was wrong.
+
+The structural response, taken after the third occurrence, was not to be more
+careful. It was to validate the ground truth the same way model output is
+validated - types, required keys, unknown keys, placeholders - and to refuse to
+score rather than score against a defective key.
+
+> **An evaluation score is only as trustworthy as the answer key behind it.**
+
+### Next action, unambiguous
+
+**Harder eval cases.** Real public manufacturer datasheets, OCR noise,
+multi-column layouts, scanned tables, genuinely contradictory specifications.
+Until the score drops below 100% there is nothing to improve and no way to
+measure whether a change helped.

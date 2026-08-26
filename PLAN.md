@@ -13,7 +13,7 @@
 | # | Constraint |
 |---|---|
 | 1 | **Total additional cost: $0.** No paid APIs, no paid hosting, no credits, no subscriptions beyond Claude. |
-| 2 | **Finish in 30 project days.** Currently on Day 9. |
+| 2 | **Finish in 30 project days.** Currently on Day 15. |
 | 3 | **≤14 API requests per day.** Free tier is 20/day. |
 | 4 | **No new tool introduced without stating its cost first** — even free ones. |
 | 5 | **Beginner-friendly.** No Docker requirement, no cloud consoles, no complex setup. |
@@ -29,19 +29,20 @@
 ## STATUS
 
 ```
-DAYS COMPLETE   ████████░░░░░░░░░░░░░░░░░░░░░░   9 / 30
+DAYS COMPLETE   ###############...............   15 / 30
 SPENT           $0.00
 WEEK 1 GATE     9 / 9  PASSED
+WEEK 2          COMPLETE
 ```
 
 | Metric | Value |
 |---|---|
-| Baseline v0 | 62/63 fields (98.4%), 7 documents |
+| Baseline v0 | **108/108 fields (100%), 12 documents** |
 | Ablation | 61/63 — one field, exactly where the removed rule applies |
 | Cost per 7-doc run | $0.0033 (free tier — not charged) |
 | Median latency | ~9.8 s |
-| Eval set | 7 documents · 63 hand-written judgements |
-| Commits | 12 across 6 distinct days |
+| Eval set | 12 documents · 108 hand-written judgements |
+| Commits | across 9 distinct days |
 
 ---
 
@@ -87,7 +88,22 @@ quota is 20/day and that shapes iteration speed.
 
 ---
 
-# WEEK 2 · DAYS 10–14 — MAKE THE NUMBER TRUSTWORTHY
+# ✅ WEEK 2 · DAYS 10–15 — COMPLETE
+
+| Day | Delivered | Requests | Cost |
+|---|---|---|---|
+| **10** | Citation verification built and measured. Degraded extraction on hard documents → made opt-in. | 6 | $0 |
+| **11** | Eval set 7 → 12 documents, 108 hand-written judgements. **v0 = 100%.** | 12 | $0 |
+| **12** | Chunking, embeddings, ChromaDB. Four retrieval failure modes documented, no LLM in the loop. | 0 | $0 |
+| **13** | Retrieval measured: **increased context 24.7%**. Not adopted, on evidence. | 0 | $0 |
+| **14** | Week 2 review. | 0 | $0 |
+| **15** | `FAILURE_ANALYSIS.md` — 12 failure modes, 4 categories. | 0 | $0 |
+
+**Week 2 total spend: $0.00. Requests used: 18.**
+
+---
+
+## SUPERSEDED PLAN FOR DAYS 10–14 (kept for the record)
 
 ### DAY 10 — Span citation and hallucination rate
 **Cost: $0 · Requests: 7**
@@ -194,11 +210,11 @@ quota is 20/day and that shapes iteration speed.
 |---|---|---|
 | 1 | Live, publicly accessible deployed system | ✅ |
 | 2 | Hand-written tool-calling loop, explainable unaided | ✅ |
-| 3 | Hand-written ground truth, 100+ judgements | ⏳ 63 |
+| 3 | Hand-written ground truth, 100+ judgements | ✅ 108 |
 | 4 | Eval harness with per-field reporting | ✅ |
 | 5 | Documented improvement across ≥3 versions | ⏳ v0 only |
-| 6 | Written failure taxonomy with counts | ⏳ Day 15 |
-| 7 | Citation verification + stated hallucination rate | ⏳ Day 10 |
+| 6 | Written failure taxonomy with counts | ✅ `FAILURE_ANALYSIS.md` |
+| 7 | Citation verification + stated hallucination rate | ⚠️ Built, measured, not adopted — documented |
 | 8 | Agentic verification with measured cost/benefit | ⏳ Day 17 |
 | 9 | Observability with real traces | ⏳ Day 20 |
 | 10 | Docker + one-command startup | ✅ |
@@ -207,7 +223,9 @@ quota is 20/day and that shapes iteration speed.
 | 13 | LinkedIn + resume repositioned | ⏳ partial |
 | 14 | 40-company pipeline | ⏳ Day 28 |
 
-**Currently 5 of 14.** Nine remaining, all scheduled, all free.
+**Currently 7 of 14**, plus one built-and-rejected-with-evidence. Six remaining, all scheduled, all free.
+
+**Blocking item 5** (improvement across ≥3 versions): the eval set is at 100% and cannot detect improvement. **Harder eval cases are the next priority.**
 
 ---
 

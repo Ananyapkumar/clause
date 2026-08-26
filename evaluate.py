@@ -20,6 +20,10 @@ from pathlib import Path
 from extract import MODEL, extract
 from schema import FIELDS
 
+# Imported lazily inside the run - loading the embedding model is slow and
+# pointless when running without retrieval.
+build_context = None
+
 import sys
 
 # ABLATION SWITCH
@@ -47,10 +51,22 @@ if "--limit" in sys.argv:
 #   py evaluate.py --with-citations
 USE_CITATIONS = "--with-citations" in sys.argv
 
+# RETRIEVAL - Day 13.
+#   py evaluate.py               whole document in the prompt  -> v0
+#   py evaluate.py --retrieval   retrieved chunks only         -> v1
+#
+# Requires `py ingest.py` to have been run first.
+USE_RETRIEVAL = "--retrieval" in sys.argv
+
 DOCS_DIR = Path("evals/documents")
 TRUTH_DIR = Path("evals/ground_truth")
 RESULTS_DIR = Path("results")
-VERSION = "v0" if USE_DOMAIN_RULES else "v0-ablation"
+if not USE_DOMAIN_RULES:
+    VERSION = "v0-ablation"
+elif USE_RETRIEVAL:
+    VERSION = "v1-retrieval"
+else:
+    VERSION = "v0"
 
 # Which fields are which type. Used to validate the ground truth, not just
 # the model output - see the type check below.
@@ -190,7 +206,13 @@ if LIMIT:
     cases = cases[:LIMIT]
     print(f"*** LIMITED RUN: first {LIMIT} case(s) only. Not a baseline. ***\n")
 
+if USE_RETRIEVAL:
+    print("Loading retrieval index (local, no API calls)...")
+    from retrieve import build_context  # noqa: E402  - deliberate lazy import
+
 condition = "WITH domain rules" if USE_DOMAIN_RULES else "WITHOUT domain rules (ABLATION)"
+if USE_RETRIEVAL:
+    condition += " + RETRIEVAL (chunks only, not full document)"
 print(f"Scoring {len(cases)} case(s) against {MODEL}")
 print(f"Condition: {condition}  ->  results saved as {VERSION}")
 print(f"Budget: this run needs at least {len(cases)} API requests "
@@ -212,7 +234,20 @@ cite_verified = 0
 cite_problems = []
 
 for case in cases:
-    run = extract(case["text"], use_domain_rules=USE_DOMAIN_RULES,
+    # RETRIEVAL: replace the full document with only the retrieved chunks.
+    # Everything downstream is identical, so any difference in score is
+    # attributable to retrieval and nothing else.
+    text_to_send = case["text"]
+    context_chars = len(text_to_send)
+    chunks_used = None
+
+    if USE_RETRIEVAL:
+        retrieved = build_context(case["id"])
+        text_to_send = retrieved["context"]
+        context_chars = retrieved["context_chars"]
+        chunks_used = retrieved["chunks_used"]
+
+    run = extract(text_to_send, use_domain_rules=USE_DOMAIN_RULES,
                   use_citations=USE_CITATIONS)
 
     if not run.ok:
@@ -249,6 +284,9 @@ for case in cases:
 
     rows.append({"id": case["id"], "correct_fields": correct, "total_fields": len(FIELDS),
                  "latency_ms": run.latency_ms, "cost_usd": run.cost_usd,
+                 "input_tokens": run.input_tokens,
+                 "context_chars": context_chars,
+                 "chunks_used": chunks_used,
                  "citations_total": run.citations_total,
                  "citations_verified": run.citations_verified})
 
@@ -298,6 +336,14 @@ if USE_CITATIONS:
     print(f"  citation accuracy    {cite_rate:.1%}")
     print(f"  HALLUCINATION RATE   {hallucination_rate:.1%}   "
           f"(cited text not found in source)")
+print("-" * 56)
+total_ctx = sum(r["context_chars"] for r in rows)
+total_in_tokens = sum(r["input_tokens"] for r in rows)
+print(f"  context sent         {total_ctx:,} chars, "
+      f"{total_in_tokens:,} input tokens")
+if USE_RETRIEVAL:
+    avg_chunks = statistics.mean(r["chunks_used"] for r in rows)
+    print(f"  chunks per document  {avg_chunks:.1f} average")
 print("-" * 56)
 print(f"  total cost           ${sum(r['cost_usd'] for r in rows):.6f}")
 print(f"  median latency       {statistics.median(r['latency_ms'] for r in rows):.0f} ms")
