@@ -1,0 +1,11 @@
+{
+  "model_number": "VX-QTM-P123-30-40",
+  "wattage_w": 30,
+  "luminous_flux_lm": 3300,
+  "cct_k": 4000,
+  "cri": 80,
+  "beam_angle_deg": 120,
+  "ip_rating": "IP40",
+  "lifespan_hours": 50000,
+  "dimmable": false
+}

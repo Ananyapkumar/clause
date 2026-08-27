@@ -1284,12 +1284,25 @@ design. Joining both reproduces the shared region twice. Visible directly in the
 e10 output: `Downward (direct) 3150 lm` appears twice, `LED board power 41 W`
 appears twice.
 
-### Decision: not adopted. No accuracy run.
+### Accuracy run: v1 = 108/108 (100%), identical to v0
 
-Retrieval exists to send **less** text. It demonstrably sends more. It has
-already failed on the axis it was supposed to win, and spending 12 API requests
-to measure its accuracy would only confirm a conclusion already established for
-free.
+The accuracy comparison was run after the survey. Result:
+
+| | Field accuracy | Cost | Median latency | Context |
+|---|---|---|---|---|
+| **v0** full document | 108/108 (100%) | $0.005510 | 14,092 ms | 14,593 chars |
+| **v1** retrieval | 108/108 (100%) | $0.005763 | 8,698 ms | 18,196 chars |
+
+**Retrieval cost 4.6% MORE and delivered identical accuracy.**
+
+That is the cleanest possible version of this finding: not "retrieval hurt
+accuracy" but "retrieval changed nothing except cost." It adds an indexing
+step, an embedding model, a vector store and a failure surface, in exchange for
+nothing.
+
+Latency was lower on the v1 run, but that is not attributable - free-tier
+rate-limit backoff dominates latency and varies run to run. **Not claimed as a
+retrieval benefit.**
 
 > **Measure the cheap thing first.** Context size costs nothing to check.
 > Accuracy costs quota. Checking in that order is the discipline.
@@ -1409,3 +1422,109 @@ score rather than score against a defective key.
 multi-column layouts, scanned tables, genuinely contradictory specifications.
 Until the score drops below 100% there is nothing to improve and no way to
 measure whether a change helped.
+
+---
+
+## DAY 16 - The eval finally discriminates
+
+**Date:** 26 August 2026
+**Requests: 18.** Eval set 12 -> 18 documents, 162 hand-written judgements.
+
+### Six new documents, targeting patterns the rules were NOT written for
+
+The previous eval set scored 100%, which meant it could not detect improvement
+or regression. Every document in it was fictional, written to test failure modes
+already known, and the extraction rules were written against those same modes.
+**A closed loop.**
+
+These six use patterns taken from real manufacturer datasheets:
+
+| Case | Pattern | Why it is not covered by existing rules |
+|---|---|---|
+| e13 | **Family table** - four variants, one line naming which applies | No rule about selecting from a variant table |
+| e14 | **OCR noise** - `l` for `1`, `O` for `0`, `rn` for `m` | Nothing handles character substitution |
+| e15 | **Two-column layout flattened** to text | Line-oriented reading assumes one spec per line |
+| e16 | **Footnotes contradicting the table** | The L80/B10 rule points at a footnote, not the table |
+| e17 | **Genuinely absent fields** | Tests admission of ignorance vs invention |
+| e18 | **Unit chaos** - `30000 mW`, `3.3 klm`, `50 kh` | "Bare numbers" says nothing about SI prefixes |
+
+### Result: 160/162 (98.8%)
+
+**The eval now has resolution.** Two failures - and both landed on the two cases
+flagged in advance as genuine judgement calls.
+
+| Case | Field | Expected | Got |
+|---|---|---|---|
+| e14 | `model_number` | `AU-SOL-RS-12-30` | `AU-SOL-RS-l2-3O` |
+| e16 | `wattage_w` | 185 | 200 |
+
+### FINDING 1 - the answer key was wrong on e14, and the model was right
+
+The model scored 8/9 on the OCR document. It **normalised every numeric field**
+correctly - 12 W, 1080 lm, 3000 K, IP44, 40000 h - and **preserved the order
+code verbatim**.
+
+That is exactly the split recorded as the counter-argument when the rule was
+written, and then not taken:
+
+> *A wrong wattage is a design error a reviewer may catch; a silently
+> "corrected" order code is a procurement error that is harder to catch.*
+
+**The model independently arrived at the more defensible engineering position.**
+The ground truth has been corrected to match, and the schema rule now reads:
+normalise OCR in numeric fields, preserve identifiers verbatim.
+
+**This is the second time the eval caught an error in the answer key rather than
+in the system.** The earlier cases were mechanical - quotes, units, missing keys.
+**This one was a judgement error**, made deliberately, with the counter-argument
+already written down and overruled. Worth remembering: documenting the
+alternative did not prevent choosing wrongly. Only the measurement did.
+
+### FINDING 2 - e16 is an inconsistency, not a capability gap
+
+Within a single document containing two footnoted values:
+
+| Field | Table | Footnote | Model took |
+|---|---|---|---|
+| `lifespan_hours` | 100 kh (L70/B50) | 70 kh (L80/B10) | **70000 - the footnote** |
+| `wattage_w` | 200 W | 185 W (post-2026 stock) | **200 - the table** |
+
+`lifespan_hours` scored **100% across all 18 documents**, including this one.
+
+**The model demonstrably can follow footnote precedence. It just did not do it
+consistently.** That is not something a bigger model or more context fixes - it
+is a specification gap, and specification gaps are fixed with rules.
+
+**Change made, single variable:** one line added to `DOMAIN_RULES`:
+
+```
+- Where a footnote or note CORRECTS or QUALIFIES a value in a table, the
+  footnote takes precedence over the table. This applies to every field,
+  not only lifetime figures.
+```
+
+Version bumped to **v2**. Measurement run pending - quota exhausted at 18 of 20.
+
+### Corrected baseline
+
+**v0 (after the e14 ground-truth correction): 161/162 = 99.4%.**
+
+One genuine model failure in 162 fields. The delta from the footnote rule will be
+small. **The value is the diagnosis, not the number:** an inconsistency within a
+single document, identified by comparing two fields that share a structure, and
+addressed with one rule.
+
+### Provenance - stated plainly
+
+| | Cases | Count |
+|---|---|---|
+| Unassisted, domain expert | e01, e04-e12 | **10 of 18** |
+| Assisted transcription / documented decisions | e02, e03, e13-e18 | 8 of 18 |
+
+The README must say *"10 of 18 cases labelled unassisted; 8 assisted and
+verified against source"* rather than claiming the whole set is expert-written.
+
+### Status
+
+Eval set: **18 documents, 162 judgements.** v0 corrected to 161/162.
+**v2 built, not yet measured.** Requests remaining today: 2.

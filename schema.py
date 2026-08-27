@@ -11,6 +11,50 @@ what makes the eval set defensible.
   lifespan_hours    L80/B10 rated life. NOT warranty hours.
   luminous_flux_lm  LUMINAIRE output, not bare LED module output.
 
+DECISIONS ADDED DAY 16 - forced by harder eval cases.
+
+  OCR noise (e14) - REVISED after the Day 16 measurement
+    Normalise unambiguous OCR substitutions (lowercase-L for 1, capital-O
+    for 0, "rn" for "m") in NUMERIC fields. PRESERVE identifiers verbatim.
+
+      wattage_w, luminous_flux_lm, cct_k, cri, beam_angle_deg,
+      lifespan_hours, ip_rating  -> normalise
+      model_number               -> exactly as printed
+
+    Reasoning: a wrong wattage is a design error a reviewer is likely to
+    catch, because it will not reconcile with the rest of the schedule. A
+    silently "corrected" order code is a procurement error that reconciles
+    with nothing and surfaces only when the wrong product arrives. The
+    asymmetry in consequence justifies the asymmetry in handling.
+
+    HOW THIS RULE CAME ABOUT - worth recording. The first version of this
+    decision normalised everything, including model_number. The Day 16 run
+    disagreed: the model normalised all seven numeric fields correctly and
+    preserved the order code verbatim. On review the model's behaviour was
+    the better engineering choice and the ground truth was corrected to
+    match it.
+
+    This is the second time the eval has caught an error in the answer key
+    rather than in the system. The first was mechanical; this one was a
+    judgement error.
+
+  Footnotes that qualify the table (e16)
+    A footnote that CORRECTS or QUALIFIES a table value takes precedence
+    over the table.
+
+    lifespan_hours: the table shows 100 kh; the footnote states that is
+    L70/B50 and gives L80/B10 as 70 kh. The existing L80/B10 rule points
+    at the footnote, not the table. -> 70000.
+
+    wattage_w: the table shows 200 W; the footnote states units supplied
+    after January 2026 draw 185 W and that the table value applies to
+    pre-2026 stock. Take the currently-supplied product -> 185.
+
+    Consistent with the e11 precedent, where a revision note superseded
+    figures printed on the same page. GENUINELY AMBIGUOUS: the document
+    never states which stock it describes. Documented so the choice is
+    auditable rather than arbitrary.
+
 CANDIDATE FIELD - noted, NOT adopted:
   dimming_protocol (DALI / 0-10V / TRIAC / phase)
   Deliberately deferred. Adding a field mid-week invalidates every

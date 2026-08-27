@@ -1,0 +1,11 @@
+{
+  "model_number": "NS-PNR-FL-200",
+  "wattage_w": 185,
+  "luminous_flux_lm": 26000,
+  "cct_k": 5700,
+  "cri": 70,
+  "beam_angle_deg": 60,
+  "ip_rating": "IP66",
+  "lifespan_hours": 70000,
+  "dimmable": true
+}

@@ -1,0 +1,30 @@
+KELVIN & MARSH LIGHTING
+Specification Sheet
+
+
+ORCHARD BOLLARD 900mm
+Order reference: KM-ORB-900-12-30
+
+
+  ELECTRICAL                          OPTICAL
+  ----------------------------        ----------------------------
+  System power        12 W            Luminous flux      780 lm
+  Supply              230 V           Colour temp       3000 K
+  Frequency           50 Hz           CRI                 Ra 80
+  Power factor        0.92            Distribution      360 deg
+
+  PROTECTION                          LIFETIME
+  ----------------------------        ----------------------------
+  Ingress             IP65            Rated life L80/B10  50000 h
+  Impact              IK10            Warranty            5 years
+  Class               Class II        Dimming        Not dimmable
+
+
+  MATERIALS                           DIMENSIONS
+  ----------------------------        ----------------------------
+  Body        Marine-grade alu         Height           900 mm
+  Diffuser    Opal acrylic             Diameter          85 mm
+  Finish      Anthracite               Weight          3.2 kg
+
+
+Kelvin & Marsh Lighting. E&OE.

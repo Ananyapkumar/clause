@@ -1,0 +1,11 @@
+{
+  "model_number": "KM-ORB-900-12-30",
+  "wattage_w": 12,
+  "luminous_flux_lm": 780,
+  "cct_k": 3000,
+  "cri": 80,
+  "beam_angle_deg": 360,
+  "ip_rating": "IP65",
+  "lifespan_hours": 50000,
+  "dimmable": false
+}

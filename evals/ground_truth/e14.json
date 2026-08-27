@@ -1,0 +1,11 @@
+{
+  "model_number": "AU-SOL-RS-l2-3O",
+  "wattage_w": 12,
+  "luminous_flux_lm": 1080,
+  "cct_k": 3000,
+  "cri": 90,
+  "beam_angle_deg": 38,
+  "ip_rating": "IP44",
+  "lifespan_hours": 40000,
+  "dimmable": true
+}

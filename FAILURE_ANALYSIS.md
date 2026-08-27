@@ -150,10 +150,16 @@ Two causes:
    the output: `Downward (direct) 3150 lm` appears twice in the assembled context
    for e10.
 
-**Decision: retrieval not adopted.** No accuracy measurement was run, and
-deliberately so - retrieval's purpose is to send less text, it demonstrably sends
-more, and spending 12 API requests would only confirm a conclusion already
-established for free.
+**Decision: retrieval not adopted.** The accuracy comparison was run:
+
+| | Field accuracy | Cost | Context |
+|---|---|---|---|
+| v0 full document | 108/108 | $0.005510 | 14,593 chars |
+| v1 retrieval | 108/108 | $0.005763 | 18,196 chars |
+
+**Identical accuracy, 4.6% higher cost, 24.7% more context.** Retrieval added an
+indexing step, an embedding model, a vector store and a new failure surface in
+exchange for nothing measurable.
 
 > **Retrieval is the wrong tool at this document size.** It becomes correct when
 > documents exceed the context window, or when a corpus is large enough that most

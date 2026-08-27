@@ -120,7 +120,10 @@ DOMAIN_RULES = """- wattage_w must be SYSTEM wattage (total power draw including
 - lifespan_hours must be the L80/B10 rated life. Do NOT use the warranty
   period, even if warranty hours are stated more prominently.
 - Efficacy figures (lm/W) are NOT wattage and NOT flux. Ignore them
-  unless you are certain which field they belong to."""
+  unless you are certain which field they belong to.
+- Where a footnote or note CORRECTS or QUALIFIES a value in a table, the
+  footnote takes precedence over the table. This applies to every field,
+  not only lifetime figures."""
 
 
 def build_instructions(

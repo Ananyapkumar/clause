@@ -1,0 +1,31 @@
+NORTHSTAR OPTICS
+Technical Datasheet
+
+
+PIONEER FLOOD 200
+Model: NS-PNR-FL-200
+
+
+PERFORMANCE
+--------------------------------------------------------
+Input power                          200 W [1]
+Luminous flux                       26.0 klm
+Correlated colour temperature        5700 K
+Colour rendering index                Ra 70
+Beam angle                            60 deg
+Ingress protection                    IP66
+Rated life                           100 kh [2]
+Dimming                              DALI-2
+
+
+NOTES
+--------------------------------------------------------
+[1] Input power measured at 230V. Units supplied after
+    January 2026 draw 185 W due to the revised driver.
+    The value in the table above applies to pre-2026 stock.
+
+[2] Rated life figure is L70/B50. The corresponding
+    L80/B10 figure is 70 kh.
+
+
+Northstar Optics. Refer to notes before specifying.

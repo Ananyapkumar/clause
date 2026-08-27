@@ -61,12 +61,21 @@ USE_RETRIEVAL = "--retrieval" in sys.argv
 DOCS_DIR = Path("evals/documents")
 TRUTH_DIR = Path("evals/ground_truth")
 RESULTS_DIR = Path("results")
+# VERSION LABEL
+#
+#   v0            whole document, domain rules, no footnote rule
+#   v0-ablation   domain rules stripped
+#   v1-retrieval  retrieved chunks instead of the full document (rejected)
+#   v2            v0 + the footnote-precedence rule  <- current
+#
+# Bumped manually at each single-variable change, so results files never
+# overwrite each other and any two versions can be compared directly.
 if not USE_DOMAIN_RULES:
     VERSION = "v0-ablation"
 elif USE_RETRIEVAL:
     VERSION = "v1-retrieval"
 else:
-    VERSION = "v0"
+    VERSION = "v2"
 
 # Which fields are which type. Used to validate the ground truth, not just
 # the model output - see the type check below.

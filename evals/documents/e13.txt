@@ -1,0 +1,29 @@
+PHOTONIX INDUSTRIAL
+Datasheet ref: PX-2291 rev B
+
+
+VULCAN LINEAR HIGH BAY - PRODUCT FAMILY
+=========================================================
+
+Available variants (order the code you require):
+
+ Order code        Power   Output    CCT     Beam   Weight
+ PX-VLC-80-40-90    80 W    11200 lm  4000K   90 deg  4.1 kg
+ PX-VLC-120-40-90  120 W    16800 lm  4000K   90 deg  5.3 kg
+ PX-VLC-160-40-90  160 W    22400 lm  4000K   90 deg  6.8 kg
+ PX-VLC-200-40-90  200 W    28000 lm  4000K   90 deg  8.2 kg
+
+THIS DATASHEET DESCRIBES:  PX-VLC-120-40-90
+
+
+COMMON SPECIFICATION (all variants)
+---------------------------------------------------------
+Colour rendering index            Ra 80
+Ingress protection                IP65
+Rated life L80/B10                60000 h
+Dimming                           1-10V
+Operating temperature             -20 to +50 C
+Power factor                      >0.95
+
+
+Photonix Industrial. Values measured at 25 C ambient.

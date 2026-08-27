@@ -1,0 +1,25 @@
+VERTEX ILLUMINATION
+Datasheet
+
+
+QUANTUM PANEL 1200x300
+Order code: VX-QTM-P123-30-40
+
+
+ELECTRICAL AND PHOTOMETRIC
+-------------------------------------------------------
+Driver input power                    30000 mW
+Luminaire luminous flux                 3.3 klm
+LED module flux                         3.9 klm
+Luminous efficacy                     110 lm/W
+Correlated colour temperature           4000 K
+Colour rendering index                   Ra 80
+Beam angle                                120 deg
+Ingress protection                       IP40
+Rated life L80/B10                       50 kh
+Rated life L70/B50                       75 kh
+Dimming                            Not dimmable
+UGR                                       <19
+
+
+Vertex Illumination. All figures nominal.

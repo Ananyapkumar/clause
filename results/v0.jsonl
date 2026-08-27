@@ -1,12 +1,18 @@
-{"id": "e01", "correct_fields": 9, "total_fields": 9, "latency_ms": 28951, "cost_usd": 0.0004933, "citations_total": 0, "citations_verified": 0}
-{"id": "e02", "correct_fields": 9, "total_fields": 9, "latency_ms": 8045, "cost_usd": 0.00041850000000000004, "citations_total": 0, "citations_verified": 0}
-{"id": "e03", "correct_fields": 9, "total_fields": 9, "latency_ms": 15726, "cost_usd": 0.000397, "citations_total": 0, "citations_verified": 0}
-{"id": "e04", "correct_fields": 9, "total_fields": 9, "latency_ms": 6624, "cost_usd": 0.00045910000000000005, "citations_total": 0, "citations_verified": 0}
-{"id": "e05", "correct_fields": 9, "total_fields": 9, "latency_ms": 26001, "cost_usd": 0.0005378000000000001, "citations_total": 0, "citations_verified": 0}
-{"id": "e06", "correct_fields": 9, "total_fields": 9, "latency_ms": 14486, "cost_usd": 0.00048090000000000003, "citations_total": 0, "citations_verified": 0}
-{"id": "e07", "correct_fields": 9, "total_fields": 9, "latency_ms": 7278, "cost_usd": 0.00047860000000000003, "citations_total": 0, "citations_verified": 0}
-{"id": "e08", "correct_fields": 9, "total_fields": 9, "latency_ms": 14999, "cost_usd": 0.0004364, "citations_total": 0, "citations_verified": 0}
-{"id": "e09", "correct_fields": 9, "total_fields": 9, "latency_ms": 8065, "cost_usd": 0.00040899999999999997, "citations_total": 0, "citations_verified": 0}
-{"id": "e10", "correct_fields": 9, "total_fields": 9, "latency_ms": 13697, "cost_usd": 0.00048709999999999997, "citations_total": 0, "citations_verified": 0}
-{"id": "e11", "correct_fields": 9, "total_fields": 9, "latency_ms": 7134, "cost_usd": 0.00046110000000000004, "citations_total": 0, "citations_verified": 0}
-{"id": "e12", "correct_fields": 9, "total_fields": 9, "latency_ms": 16103, "cost_usd": 0.00045129999999999997, "citations_total": 0, "citations_verified": 0}
+{"id": "e01", "correct_fields": 9, "total_fields": 9, "latency_ms": 9790, "cost_usd": 0.0004933, "input_tokens": 561, "context_chars": 1478, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e02", "correct_fields": 9, "total_fields": 9, "latency_ms": 7061, "cost_usd": 0.00041850000000000004, "input_tokens": 370, "context_chars": 641, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e03", "correct_fields": 9, "total_fields": 9, "latency_ms": 7908, "cost_usd": 0.000397, "input_tokens": 340, "context_chars": 556, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e04", "correct_fields": 9, "total_fields": 9, "latency_ms": 7364, "cost_usd": 0.00045910000000000005, "input_tokens": 497, "context_chars": 1265, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e05", "correct_fields": 9, "total_fields": 9, "latency_ms": 9657, "cost_usd": 0.0005378000000000001, "input_tokens": 701, "context_chars": 1762, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e06", "correct_fields": 9, "total_fields": 9, "latency_ms": 8853, "cost_usd": 0.00048090000000000003, "input_tokens": 578, "context_chars": 1773, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e07", "correct_fields": 9, "total_fields": 9, "latency_ms": 73555, "cost_usd": 0.00047860000000000003, "input_tokens": 562, "context_chars": 1535, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e08", "correct_fields": 9, "total_fields": 9, "latency_ms": 7570, "cost_usd": 0.0004364, "input_tokens": 413, "context_chars": 954, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e09", "correct_fields": 9, "total_fields": 9, "latency_ms": 7145, "cost_usd": 0.00040899999999999997, "input_tokens": 355, "context_chars": 795, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e10", "correct_fields": 9, "total_fields": 9, "latency_ms": 6764, "cost_usd": 0.00048709999999999997, "input_tokens": 557, "context_chars": 1543, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e11", "correct_fields": 9, "total_fields": 9, "latency_ms": 7272, "cost_usd": 0.00046110000000000004, "input_tokens": 512, "context_chars": 1458, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e12", "correct_fields": 9, "total_fields": 9, "latency_ms": 7653, "cost_usd": 0.00045129999999999997, "input_tokens": 446, "context_chars": 833, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e13", "correct_fields": 9, "total_fields": 9, "latency_ms": 7310, "cost_usd": 0.0004825999999999999, "input_tokens": 542, "context_chars": 948, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e14", "correct_fields": 8, "total_fields": 9, "latency_ms": 74224, "cost_usd": 0.00042, "input_tokens": 375, "context_chars": 805, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e15", "correct_fields": 9, "total_fields": 9, "latency_ms": 7613, "cost_usd": 0.00045180000000000003, "input_tokens": 456, "context_chars": 1124, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e16", "correct_fields": 8, "total_fields": 9, "latency_ms": 10757, "cost_usd": 0.00043749999999999995, "input_tokens": 425, "context_chars": 880, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e17", "correct_fields": 9, "total_fields": 9, "latency_ms": 5909, "cost_usd": 0.000402, "input_tokens": 365, "context_chars": 725, "chunks_used": null, "citations_total": 0, "citations_verified": 0}
+{"id": "e18", "correct_fields": 9, "total_fields": 9, "latency_ms": 10269, "cost_usd": 0.0004361, "input_tokens": 387, "context_chars": 782, "chunks_used": null, "citations_total": 0, "citations_verified": 0}

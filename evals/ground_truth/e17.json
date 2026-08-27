@@ -1,0 +1,11 @@
+{
+  "model_number": "GL-HTH-WW-18",
+  "wattage_w": 18,
+  "luminous_flux_lm": 1980,
+  "cct_k": 4000,
+  "cri": null,
+  "beam_angle_deg": null,
+  "ip_rating": "IP20",
+  "lifespan_hours": 50000,
+  "dimmable": false
+}
