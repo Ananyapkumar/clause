@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from extract import MODEL, extract
-from schema import FIELDS
+from schema import FIELDS, values_match
 
 # Imported lazily inside the run - loading the embedding model is slow and
 # pointless when running without retrieval.
@@ -46,6 +46,20 @@ USE_DOMAIN_RULES = "--no-domain-rules" not in sys.argv
 LIMIT = None
 if "--limit" in sys.argv:
     LIMIT = int(sys.argv[sys.argv.index("--limit") + 1])
+
+# CASE SELECTION - added Day 17.
+#
+#   py evaluate.py --only e13,e14,e15,e16,e17,e18
+#
+# --limit takes the FIRST n cases, which are the easy ones. When a change
+# only plausibly affects the hard documents, spending requests on e01-e09
+# to watch them stay correct is waste. This picks specific cases.
+#
+# A subset run is NOT a baseline. It is only comparable against the same
+# subset of another version.
+ONLY = None
+if "--only" in sys.argv:
+    ONLY = [c.strip() for c in sys.argv[sys.argv.index("--only") + 1].split(",")]
 
 # CITATIONS - off by default. See the Day 10 finding in schema.py.
 #   py evaluate.py --with-citations
@@ -77,37 +91,45 @@ elif USE_RETRIEVAL:
 else:
     VERSION = "v2"
 
+# RESULTS FILENAME - separated from VERSION on Day 18, after a real loss.
+#
+# WHAT HAPPENED
+#   --only was added on Day 17 to spend 1 request instead of 18. It changed
+#   which cases ran. It did NOT change the output filename. So
+#
+#       py evaluate.py --only e16
+#
+#   wrote a 1-document run to results/v2.jsonl and results/failures-v2.json,
+#   silently destroying the 18-document v2 baseline (161/162) that had cost
+#   18 requests to produce. The run printed "SUBSET RUN: not a baseline" at
+#   the top and then overwrote the baseline at the bottom.
+#
+#   The warning was in the terminal. The damage was on disk. A warning that
+#   does not change behaviour is decoration.
+#
+# THE FIX
+#   A subset run can no longer write to a baseline filename. Ever. The label
+#   carries the shape of the run, so a file's name states what is in it:
+#
+#       results/v2.jsonl                 full 18-document baseline
+#       results/v2-only-e16.jsonl        one named case
+#       results/v2-first2.jsonl          --limit 2
+#
+# WHY NOT JUST BE CAREFUL
+#   Because "be careful" is what was in place on Day 17, and it is the same
+#   answer that failed three times on ground-truth defects before the harness
+#   started validating its own inputs. The third occurrence of a class of bug
+#   is a signal about the process, not the instance.
+RESULTS_LABEL = VERSION
+if ONLY:
+    RESULTS_LABEL = f"{VERSION}-only-{'-'.join(ONLY)}"
+elif LIMIT:
+    RESULTS_LABEL = f"{VERSION}-first{LIMIT}"
+
 # Which fields are which type. Used to validate the ground truth, not just
 # the model output - see the type check below.
 TEXT_FIELDS = {"model_number", "ip_rating"}
 BOOL_FIELDS = {"dimmable"}
-
-
-# =============================================================
-# COMPARING ONE FIELD
-# =============================================================
-# Deliberately strict. A datasheet value is either right or it isn't -
-# there is no "nearly 4940 lumens". The only tolerance allowed is for
-# text formatting (case and surrounding spaces) on the two text fields.
-
-def values_match(field: str, predicted, expected) -> bool:
-    # null == null is a correct answer: "this document doesn't state it"
-    if predicted is None and expected is None:
-        return True
-    if predicted is None or expected is None:
-        return False
-
-    if field in ("model_number", "ip_rating"):
-        return str(predicted).strip().upper() == str(expected).strip().upper()
-
-    if field == "dimmable":
-        return bool(predicted) == bool(expected)
-
-    # Numeric fields: compare as numbers so 4940 == 4940.0
-    try:
-        return float(predicted) == float(expected)
-    except (TypeError, ValueError):
-        return str(predicted).strip() == str(expected).strip()
 
 
 # =============================================================
@@ -211,6 +233,15 @@ if not cases:
     print("No complete cases. Nothing to score.")
     raise SystemExit(1)
 
+if ONLY:
+    wanted = set(ONLY)
+    missing = wanted - {c["id"] for c in cases}
+    if missing:
+        print(f"Unknown case id(s): {', '.join(sorted(missing))}")
+        raise SystemExit(1)
+    cases = [c for c in cases if c["id"] in wanted]
+    print(f"*** SUBSET RUN: {', '.join(ONLY)}. Not a baseline. ***\n")
+
 if LIMIT:
     cases = cases[:LIMIT]
     print(f"*** LIMITED RUN: first {LIMIT} case(s) only. Not a baseline. ***\n")
@@ -223,7 +254,7 @@ condition = "WITH domain rules" if USE_DOMAIN_RULES else "WITHOUT domain rules (
 if USE_RETRIEVAL:
     condition += " + RETRIEVAL (chunks only, not full document)"
 print(f"Scoring {len(cases)} case(s) against {MODEL}")
-print(f"Condition: {condition}  ->  results saved as {VERSION}")
+print(f"Condition: {condition}  ->  results saved as {RESULTS_LABEL}")
 print(f"Budget: this run needs at least {len(cases)} API requests "
       f"(more if any document needs a retry).")
 print(f"Free tier allows 20 per day.\n")
@@ -358,17 +389,20 @@ print(f"  total cost           ${sum(r['cost_usd'] for r in rows):.6f}")
 print(f"  median latency       {statistics.median(r['latency_ms'] for r in rows):.0f} ms")
 print("=" * 56)
 print(f"\n  {len(failures)} case(s) with mismatches -> "
-      f"results/failures-{VERSION}.json")
+      f"results/failures-{RESULTS_LABEL}.json")
 
 RESULTS_DIR.mkdir(exist_ok=True)
 
-with open(RESULTS_DIR / f"{VERSION}.jsonl", "w", encoding="utf-8") as f:
+with open(RESULTS_DIR / f"{RESULTS_LABEL}.jsonl", "w", encoding="utf-8") as f:
     for row in rows:
         f.write(json.dumps(row) + "\n")
 
-with open(RESULTS_DIR / f"failures-{VERSION}.json", "w", encoding="utf-8") as f:
+with open(RESULTS_DIR / f"failures-{RESULTS_LABEL}.json", "w", encoding="utf-8") as f:
     json.dump({
         "version": VERSION,
+        "results_label": RESULTS_LABEL,
+        "is_baseline": not (ONLY or LIMIT),
+        "cases_run": [c["id"] for c in cases],
         "domain_rules_in_prompt": USE_DOMAIN_RULES,
         "run_at": datetime.now(timezone.utc).isoformat(),
         "model": MODEL,

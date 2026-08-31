@@ -213,6 +213,39 @@ class LightingDatasheet(BaseModel):
 FIELDS = [f for f in LightingDatasheet.model_fields if f != "citations"]
 
 
+def values_match(field: str, predicted, expected) -> bool:
+    """Compare one field value against ground truth.
+
+    Lives here rather than in evaluate.py because more than one script needs
+    it, and two scripts scoring the same data differently is how you get two
+    different numbers for the same run.
+
+    That happened on Day 17. A helper inside verify_agent.py compared
+    str(185.0) against str(185), reported a mismatch that did not exist, and
+    briefly looked like a model failure. One scoring function, one home.
+
+    Deliberately strict: a datasheet value is either right or it is not.
+    The only tolerance is case and surrounding whitespace on the text fields.
+    """
+    # null == null is a correct answer: "this document does not state it".
+    if predicted is None and expected is None:
+        return True
+    if predicted is None or expected is None:
+        return False
+
+    if field in ("model_number", "ip_rating"):
+        return str(predicted).strip().upper() == str(expected).strip().upper()
+
+    if field == "dimmable":
+        return bool(predicted) == bool(expected)
+
+    # Numeric: compare AS NUMBERS, so 185 and 185.0 match.
+    try:
+        return float(predicted) == float(expected)
+    except (TypeError, ValueError):
+        return str(predicted).strip() == str(expected).strip()
+
+
 # =============================================================
 # ABLATION SUPPORT
 # =============================================================

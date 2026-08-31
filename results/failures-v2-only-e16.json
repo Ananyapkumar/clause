@@ -1,0 +1,35 @@
+{
+  "version": "v2",
+  "domain_rules_in_prompt": true,
+  "run_at": "2026-08-31T06:03:31.328026+00:00",
+  "model": "gemini-3.6-flash",
+  "summary": {
+    "documents": 1,
+    "field_accuracy": 1.0,
+    "fully_correct_docs": 1.0,
+    "per_field": {
+      "model_number": 1.0,
+      "wattage_w": 1.0,
+      "luminous_flux_lm": 1.0,
+      "cct_k": 1.0,
+      "cri": 1.0,
+      "beam_angle_deg": 1.0,
+      "ip_rating": 1.0,
+      "lifespan_hours": 1.0,
+      "dimmable": 1.0
+    },
+    "citations_total": 0,
+    "citations_verified": 0,
+    "citation_accuracy": 0.0,
+    "hallucination_rate": 1.0
+  },
+  "failures": [],
+  "citation_problems": [
+    {
+      "id": "e16",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    }
+  ]
+}
