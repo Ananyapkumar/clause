@@ -57,7 +57,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-from extract import MODEL, extract
+from extract import MODEL, extract, log_run
 from schema import FIELDS, values_match
 
 DOCS_DIR = Path("evals/documents")
@@ -131,6 +131,9 @@ def main() -> None:
 
     for i in range(1, runs + 1):
         run = extract(document, use_domain_rules=use_domain_rules)
+        # Logged so the noise floor leaves a durable record, not scrollback.
+        log_run(run, input_length=len(document),
+                source=f"variance-{doc_id}-{version}-run{i}")
         total_requests += run.attempts
         total_cost += run.cost_usd
         latencies.append(run.latency_ms)

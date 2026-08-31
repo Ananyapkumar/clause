@@ -17,7 +17,7 @@ import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
-from extract import MODEL, extract
+from extract import MODEL, extract, log_run
 from schema import FIELDS, values_match
 
 # Imported lazily inside the run - loading the embedding model is slow and
@@ -289,6 +289,20 @@ for case in cases:
 
     run = extract(text_to_send, use_domain_rules=USE_DOMAIN_RULES,
                   use_citations=USE_CITATIONS)
+
+    # LOG IT - added Day 18, closing a gap that had been open since Day 5.
+    #
+    # log_run() was written on Day 4 and wired into the API path only. The
+    # eval, written on Day 5, calls extract() directly and never logged a
+    # thing. So requests.jsonl held 3 records - all from the API, all from
+    # two weeks ago - while every eval run, every latency figure and every
+    # cost number lived only in terminal scrollback.
+    #
+    # The 114-second e16 run was invisible for exactly this reason.
+    #
+    # The source tag carries the run label, so eval traffic can be separated
+    # from API traffic and from one version's runs to another's.
+    log_run(run, input_length=len(text_to_send), source=f"eval-{RESULTS_LABEL}")
 
     if not run.ok:
         rows.append({"id": case["id"], "correct_fields": 0, "total_fields": len(FIELDS),

@@ -1,0 +1,21 @@
+# Line-ending policy - added Day 18.
+#
+# THE PROBLEM IT FIXES
+#   Every commit was rewriting every file in results/ - 439 insertions and
+#   439 deletions with no content change. `git diff -w` (whitespace-blind)
+#   showed nothing at all: it was pure CRLF/LF churn from editing on Windows
+#   against files written with LF.
+#
+#   That is not cosmetic. A diff full of phantom changes is a diff nobody
+#   reads, which is how a real change to an eval result gets waved through.
+#   Results files are evidence; their history has to be legible.
+#
+# THE POLICY
+#   Normalise text to LF in the repository, check out natively on Windows.
+* text=auto
+
+# Data and results: LF in the repo and in the working copy, always.
+*.jsonl text eol=lf
+*.json  text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
