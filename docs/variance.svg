@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="705" viewBox="0 0 940 705" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="940" height="705" fill="#ffffff"/>
+<text x="32" y="44" font-size="21" font-weight="700" fill="#1a1a1a">Where the variance actually is</text>
+<text x="32" y="70" font-size="13" fill="#6b7280">Per-field correctness across repeated runs on identical input — same prompt, same model, same document.</text>
+<text x="32" y="90" font-size="13" fill="#6b7280">Every field that moved is a field requiring a domain judgement. No transcription field moved, on any run.</text>
+<line x1="210.0" y1="120" x2="210.0" y2="614" stroke="#e5e7eb" stroke-width="1"/>
+<text x="210.0" y="112" font-size="11" fill="#6b7280" text-anchor="middle">0%</text>
+<line x1="325.0" y1="120" x2="325.0" y2="614" stroke="#e5e7eb" stroke-width="1"/>
+<text x="325.0" y="112" font-size="11" fill="#6b7280" text-anchor="middle">25%</text>
+<line x1="440.0" y1="120" x2="440.0" y2="614" stroke="#e5e7eb" stroke-width="1"/>
+<text x="440.0" y="112" font-size="11" fill="#6b7280" text-anchor="middle">50%</text>
+<line x1="555.0" y1="120" x2="555.0" y2="614" stroke="#e5e7eb" stroke-width="1"/>
+<text x="555.0" y="112" font-size="11" fill="#6b7280" text-anchor="middle">75%</text>
+<line x1="670.0" y1="120" x2="670.0" y2="614" stroke="#e5e7eb" stroke-width="1"/>
+<text x="670.0" y="112" font-size="11" fill="#6b7280" text-anchor="middle">100%</text>
+<text x="196" y="153" font-size="12.5" font-weight="600" fill="#1a1a1a" text-anchor="end">wattage_w</text>
+<rect x="210" y="132" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="678.0" y="144" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="151" width="115.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="333.0" y="163" font-size="10.5" fill="#6b7280">e16 · 2/8</text>
+<text x="196" y="208" font-size="12.5" font-weight="600" fill="#1a1a1a" text-anchor="end">model_number</text>
+<rect x="210" y="187" width="184.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="402.0" y="199" font-size="10.5" fill="#6b7280">e14 · 2/5</text>
+<rect x="210" y="206" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="678.0" y="218" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="263" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">luminous_flux_lm</text>
+<rect x="210" y="242" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="678.0" y="254" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="261" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="678.0" y="273" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="318" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">lifespan_hours</text>
+<rect x="210" y="297" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="678.0" y="309" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="316" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="678.0" y="328" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="373" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">cct_k</text>
+<rect x="210" y="352" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="364" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="371" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="383" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="428" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">cri</text>
+<rect x="210" y="407" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="419" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="426" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="438" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="483" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">beam_angle_deg</text>
+<rect x="210" y="462" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="474" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="481" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="493" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="538" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">ip_rating</text>
+<rect x="210" y="517" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="529" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="536" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="548" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="196" y="593" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">dimmable</text>
+<rect x="210" y="572" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="584" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<rect x="210" y="591" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="678.0" y="603" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<rect x="732" y="120" width="196" height="347" rx="6" fill="#f9fafb" stroke="#e5e7eb"/>
+<text x="746" y="146" font-size="12.5" font-weight="700" fill="#1a1a1a">THE FINDING</text>
+<text x="746" y="168" font-size="11.5" font-weight="400" fill="#6b7280">Transcription fields are</text>
+<text x="746" y="185" font-size="11.5" font-weight="400" fill="#6b7280">deterministic. Judgement</text>
+<text x="746" y="202" font-size="11.5" font-weight="400" fill="#6b7280">fields are not.</text>
+<text x="746" y="227" font-size="12.5" font-weight="600" fill="#1a1a1a">Noise floor: 1 field</text>
+<text x="746" y="244" font-size="11.5" font-weight="400" fill="#6b7280">per document, measured</text>
+<text x="746" y="261" font-size="11.5" font-weight="400" fill="#6b7280">independently on two</text>
+<text x="746" y="278" font-size="11.5" font-weight="400" fill="#6b7280">documents.</text>
+<text x="746" y="303" font-size="11.5" font-weight="400" fill="#6b7280">So a one-field difference</text>
+<text x="746" y="320" font-size="11.5" font-weight="400" fill="#6b7280">between versions cannot</text>
+<text x="746" y="336" font-size="11.5" font-weight="400" fill="#6b7280">be told from noise — and</text>
+<text x="746" y="352" font-size="11.5" font-weight="400" fill="#6b7280">that is exactly the size</text>
+<text x="746" y="369" font-size="11.5" font-weight="400" fill="#6b7280">of the v0 vs v2 gap this</text>
+<text x="746" y="386" font-size="11.5" font-weight="400" fill="#6b7280">project set out to read.</text>
+<text x="746" y="411" font-size="11" font-weight="400" fill="#6b7280">Not every judgement field</text>
+<text x="746" y="426" font-size="11" font-weight="400" fill="#6b7280">was stressed by these two</text>
+<text x="746" y="441" font-size="11" font-weight="400" fill="#6b7280">documents — red marks the</text>
+<text x="746" y="456" font-size="11" font-weight="400" fill="#6b7280">category, not the result.</text>
+<text x="732" y="497" font-size="12.5" font-weight="600" fill="#1a1a1a">Scores observed</text>
+<text x="732" y="517" font-size="11.5" fill="#6b7280">8–9 of 9, n=13 runs</text>
+<text x="732" y="535" font-size="11.5" fill="#6b7280">spread = 1 field</text>
+<rect x="32" y="643" width="11" height="11" rx="2" fill="#3b82f6" opacity="0.5"/>
+<text x="49" y="653" font-size="12" fill="#6b7280">transcription</text>
+<rect x="172" y="643" width="11" height="11" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="189" y="653" font-size="12" fill="#6b7280">domain judgement</text>
+<text x="908" y="653" font-size="11" fill="#6b7280" text-anchor="end">generated by make_figures.py from results/variance-*.json</text>
+<text x="32" y="675" font-size="11" fill="#6b7280">Field categories declared in the script ahead of the data, so the boundary was not drawn around whatever turned out to be unstable.</text>
+</svg>

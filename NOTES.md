@@ -1528,3 +1528,283 @@ verified against source"* rather than claiming the whole set is expert-written.
 
 Eval set: **18 documents, 162 judgements.** v0 corrected to 161/162.
 **v2 built, not yet measured.** Requests remaining today: 2.
+
+---
+
+## DAY 18 - The measurement was the thing that was broken
+
+**13 of 20 requests. $0.00. Four defects found, three of them in the measuring
+apparatus rather than in the system being measured.**
+
+The day started with one question - *how much does the score move when nothing
+changes?* - and ended with a better one answered: *where does it move, and why
+there?*
+
+### Before any of it: the baseline had already been destroyed
+
+`results/v2.jsonl` contained **one document**. Dated that morning.
+
+`--only` was added on Day 17 to spend 1 request instead of 18. It changed which
+cases ran. It did not change the output filename. So
+
+```
+py evaluate.py --only e16
+```
+
+wrote a one-document subset over the 18-document v2 baseline that had cost 18
+requests to produce. The run printed **"SUBSET RUN: e16. Not a baseline."** at
+the top and then overwrote the baseline at the bottom.
+
+**The warning was in the terminal. The damage was on disk. A warning that does
+not change behaviour is decoration.**
+
+Fixed structurally: `VERSION` (the condition, for display) is now separate from
+`RESULTS_LABEL` (the filename, which encodes the shape of the run). A subset run
+physically cannot write to a baseline filename.
+
+```
+results/v2.jsonl              full 18-document baseline
+results/v2-only-e16.jsonl     one named case
+results/v2-first2.jsonl       --limit 2
+```
+
+Also found, same inspection: the version files were never comparable to each
+other anyway. **v0 = 18 documents, v0-ablation = 7, v1-retrieval = 12.** Every
+cross-version comparison made before today was between different document sets.
+
+### The eval had never been logged. Not once in thirteen days.
+
+`requests.jsonl` held **three records, all `source=api`, all from 13 August.**
+
+`log_run()` was written on Day 4 and wired into the API path. The eval, written
+on Day 5, calls `extract()` directly and never called it. So every eval run,
+every latency figure and every cost number for thirteen days existed only in
+terminal scrollback.
+
+The observability story was better on paper than in the data. A 114-second
+outlier that morning was invisible for exactly this reason.
+
+Both `evaluate.py` and `measure_variance.py` now log every run, tagged by source
+(`eval-v2`, `variance-e16-v2-run3`).
+
+### FINDING 1 - a block of consecutive runs is one sample, not the distribution
+
+First variance block on e16: five runs, same value five times, **noise floor
+reported as 0**.
+
+Pooled with three observations already on record, the same field had produced
+two different values and the real noise floor was **1 field**.
+
+Five identical draws from a 75/25 split has probability `0.75^5 = 0.24`. **One
+run in four.** So "all five agreed" is unremarkable and must never be read as
+"the field is stable."
+
+`measure_variance.py` now accumulates across invocations instead of overwriting,
+prints the pooled figure beside the block figure, and warns when they disagree.
+
+Same lesson as the filename collision, four hours apart: **destroying prior
+evidence is how you get a confident wrong answer.**
+
+### FINDING 2 - THE NOISE FLOOR, measured twice, independently
+
+| Document | Runs | Noise floor | Unstable field | Other 8 fields |
+|---|---|---|---|---|
+| e16 | 8 | **1 field** | `wattage_w` - 2/8 correct | stable |
+| e14 | 5 | **1 field** | `model_number` - 2/5 correct | stable |
+
+**Consequence, stated plainly: every version comparison in this project is
+n=1 per condition.**
+
+```
+v0   161/162
+v2   161/162
+```
+
+The difference is 0 fields against a measured noise floor of 1. That is not "no
+effect" - it is **unmeasured**. It cannot distinguish a one-field improvement
+from a re-roll.
+
+Detecting a one-field difference in 162 would need repeats far beyond a
+20-request daily quota. The correct response is not a bigger experiment. It is
+to **stop making version-to-version claims** and report absolute performance
+with an error bar, plus per-field findings that do not depend on aggregate
+deltas.
+
+### FINDING 3 - variance is concentrated in the judgement fields
+
+The finding the day was actually for.
+
+Across ten runs on two documents, **exactly one field per document moves, and in
+both cases it is the field where the domain rules are doing the work.**
+
+| Field | Nature of the task | Stability |
+|---|---|---|
+| `cct_k`, `cri`, `ip_rating`, `beam_angle_deg`, `luminous_flux_lm`, `lifespan_hours`, `dimmable` | transcription | **100% across all 10 runs** |
+| `wattage_w` (e16) | footnote conditions on unstated context | 2/8 |
+| `model_number` (e14) | OCR-damaged identifier, verbatim rule | 2/5 |
+
+**The model is deterministic where the task is transcription and
+non-deterministic where the task is judgement.**
+
+`docs/variance.svg` renders this, generated by `make_figures.py` from
+`results/variance-*.json` - so it cannot go stale as n grows. The judgement/
+transcription split is declared **in the script, ahead of the data**, so the
+boundary was not drawn around whatever happened to be unstable.
+
+### FINDING 4 - the footnote rule works for RELABELLING, not for CONDITIONING
+
+Day 16 called e16 "an inconsistency, not a capability gap." At n=5 it is not
+inconsistency. It is **systematic**, and the two footnotes explain why.
+
+```
+[2] "Rated life figure is L70/B50. The corresponding L80/B10 figure is 70 kh."
+    -> RELABELS a value against a criterion the rules already name.
+       The rule says take L80/B10. The footnote hands over a value labelled
+       L80/B10. String match. No judgement required.
+       APPLIED 5/5.
+
+[1] "...units supplied after January 2026 draw 185 W due to the revised driver.
+     The value in the table above applies to pre-2026 stock."
+    -> CONDITIONS a value on context the document never resolves.
+       No rule states which stock is being specified. Choosing 185 requires an
+       UNSTATED premise: that the currently-supplied product is the subject.
+       IGNORED 5/5.
+```
+
+Day 16's diagnosis was right about the mechanism and wrong about the remedy. A
+rule fixes a specification gap. This is not a specification gap - it is a gap in
+the **document**, and no prompt rule closes it.
+
+### FINDING 5 - the verification pass anchors. Rejected.
+
+Two requests decided it.
+
+```
+shown 200  - the model's own preferred answer, 6/8 runs  ->  returned 200
+shown 185  - against the model's prior,        2/8 runs  ->  returned 185
+```
+
+**It returns whatever it is handed, in both directions.** The second run is the
+diagnostic one: the verifier kept a value the extractor produces in only a
+quarter of unassisted runs, purely because it was shown it.
+
+So Day 17's **"pass 2 changed 0 fields"** was not agreement. It was the default
+behaviour, and it carries no information about whether pass 1 was right.
+
+`verify_agent.py` retained unshipped with the verdict at the top of the file -
+same treatment as citations and retrieval. **Third component built, measured,
+and rejected on evidence.**
+
+### FINDING 6 - self-consistency cannot rescue a systematically biased field
+
+The obvious successor to an anchoring verifier is a *blind* second pass: extract
+twice, compare in code, no anchoring possible.
+
+**That data already existed.** `measure_variance.py` is a blind multi-sample.
+Eight observations of e16: 200 six times, 185 twice. Majority-of-5 returns
+**200** - the wrong answer - essentially always.
+
+Single sampling gets e16 right 25% of the time. Voting gets it right
+approximately never.
+
+**Voting reduces variance AROUND the model's central tendency. It does not MOVE
+the central tendency.** Where the mode is wrong, self-consistency converts an
+occasionally-right system into a reliably-wrong one.
+
+No self-checking mechanism built on this model can fix that field.
+
+### FINDING 7 - the Day 16 ground-truth correction rested on a 40% behaviour
+
+Day 16 changed e14's answer key from *normalise everything* to *preserve
+`model_number` verbatim*, because the model preserved it.
+
+**It does that 2 times in 5.** The correction was made on a single sample of a
+40/60 coin flip.
+
+The decision still stands, and the test for why is the one already written down:
+a legitimate correction needs a domain reason that holds **independently of what
+the model did**. It has one - a wrong wattage fails to reconcile with the rest
+of the schedule and gets caught; a silently altered order code reconciles with
+nothing and surfaces when the wrong product arrives.
+
+**So the decision survives. The evidence cited for it does not.** Those are
+different things and the difference is worth keeping straight.
+
+### Two defects in the measuring apparatus itself
+
+**(a) The variance script displayed a value that never existed.** `canonical()`
+upper-cases text fields so counting matches `values_match`. The display printed
+that key rather than the raw value, so the e14 run reported
+
+```
+model_number  VARIES  'AU-SOL-RS-L2-3O' x2
+```
+
+when the model had returned `'AU-SOL-RS-l2-3O'` - lowercase L, verbatim correct.
+
+**On e14 of all documents** - the one that exists to test whether OCR-damaged
+characters survive character for character. A display layer that alters
+characters destroys the only thing being measured. Cost twenty minutes chasing a
+scoring bug that was not there. Now counts on the canonical key and shows the
+raw value.
+
+**(b) `values_match` case-folded the one field where case is data.**
+`model_number` was upper-cased alongside `ip_rating`, inheriting a tolerance
+chosen for a standardised code. Under it, a model returning `AU-SOL-RS-L2-3O`
+would have scored **correct** while altering the identifier - the eval could not
+have detected a violation of its own headline rule.
+
+Never fired. Verified against every recorded observation: **the fix changes zero
+scores**, which is why it was safe to change inside a version rather than at a
+boundary. `ip_rating` stays case-insensitive; `model_number` is now exact.
+
+### Honest accuracy, with an error bar
+
+Two fields with measured failure rates:
+
+```
+wattage_w      wrong 75%     (6/8)
+model_number   wrong 60%     (3/5)
+
+expected wrong  = 0.75 + 0.60                = 1.35 fields
+expected score  = 162 - 1.35                 = 160.7 / 162
+standard dev    = sqrt(0.75*0.25 + 0.6*0.4)  = 0.65 fields
+```
+
+**160.7 +/- 0.7 out of 162  =  99.2% +/- 0.4%**
+
+Three recorded runs: **160, 161, 161.** Every one inside half a standard
+deviation. The distribution predicts the history exactly.
+
+Assumption to state whenever this number is used: **the other 16 documents are
+assumed stable and that is untested.** Two documents were measured because two
+was what the quota allowed.
+
+### The pattern across all four defects
+
+The filename that overwrote a baseline. The canonicaliser that showed a phantom
+value. The comparison that folded away the signal. The injection value chosen
+before the base rate existed.
+
+Every one is the same shape: **a measurement taken before anyone checked what it
+could distinguish.** And every one was caught by pooling evidence rather than
+replacing it - the pooled noise floor of 1 exists only because the earlier
+observations survived.
+
+**Anything that transforms data before you look at it is part of the
+measurement, and has to be audited like the measurement.**
+
+### Status
+
+| | |
+|---|---|
+| Eval set | 18 documents, 162 judgements |
+| Honest score | **160.7 +/- 0.7 / 162 (99.2% +/- 0.4%)** |
+| Noise floor | **1 field per document**, measured on 2 documents |
+| Components rejected on evidence | citations, retrieval, **verification pass** |
+| Baseline files | v2 destroyed and pending regeneration (18 requests, Day 19) |
+| Requests today | 13 of 20 |
+| Spend to date | **$0.00** |
+
+**Day 19:** regenerate the 18-document v2 baseline, reportable with the error
+bar for the first time.
