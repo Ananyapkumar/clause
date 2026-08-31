@@ -1,6 +1,39 @@
 """Second-pass verification: check the extraction against the document.
 
-Day 17.
+Day 17.  REJECTED Day 18 - see VERDICT below. Retained unshipped as evidence.
+
+=========================================================================
+VERDICT: THE VERIFIER ANCHORS. DO NOT ENABLE THIS.
+=========================================================================
+Two requests decided it (test_anchoring.py):
+
+    shown 200 - the model's own preferred answer, 6/8 runs  ->  returned 200
+    shown 185 - against the model's prior,        2/8 runs  ->  returned 185
+
+It returns whatever it is handed. The second run is the diagnostic one: the
+verifier kept a value the extractor itself produces only a quarter of the time,
+purely because it was shown it.
+
+So "pass 2 changed 0 fields" on Day 17 was not agreement. It was the default
+behaviour, and it carries no information about whether pass 1 was right.
+
+Cost of shipping it: 2x requests, 2x latency, zero detection.
+
+WHAT THE DAY 17 NOTES BELOW GOT RIGHT AND WRONG
+  Right: the concern, written before the test, that "the verifier shares the
+         first pass's blind spots". It is worse than that - it shares whatever
+         answer it is given.
+  Right: that BOTH directions must be measured, not just fixes.
+  Wrong: running it on a document where pass 1 happened to be correct, and
+         recording the zero-change result as if it meant something.
+
+WHAT WOULD BE WORTH TESTING INSTEAD
+  - A blind second pass: extract twice and compare in code, so the second call
+    never sees the candidate. NOTE: measure_variance.py already IS this, and it
+    shows majority voting would lock in 200 - the wrong answer. See Finding A4.
+  - One narrow question per field rather than nine at once.
+  - A different model for the second pass, so the blind spots differ.
+=========================================================================
 
 THE IDEA
 --------

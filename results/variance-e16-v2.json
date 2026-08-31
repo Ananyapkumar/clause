@@ -1,0 +1,131 @@
+{
+  "document": "e16",
+  "version": "v2",
+  "model": "gemini-3.6-flash",
+  "run_at": "2026-08-31T06:24:08.581975+00:00",
+  "runs_requested": 5,
+  "runs_successful": 5,
+  "api_requests_used": 5,
+  "scores": [
+    8,
+    9,
+    9,
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "noise_floor_fields": 0,
+  "unstable_fields": {},
+  "observations": [
+    {
+      "model_number": null,
+      "wattage_w": 200.0,
+      "luminous_flux_lm": null,
+      "cct_k": null,
+      "cri": null,
+      "beam_angle_deg": null,
+      "ip_rating": null,
+      "lifespan_hours": null,
+      "dimmable": null
+    },
+    {
+      "model_number": null,
+      "wattage_w": 185.0,
+      "luminous_flux_lm": null,
+      "cct_k": null,
+      "cri": null,
+      "beam_angle_deg": null,
+      "ip_rating": null,
+      "lifespan_hours": null,
+      "dimmable": null
+    },
+    {
+      "model_number": null,
+      "wattage_w": 185.0,
+      "luminous_flux_lm": null,
+      "cct_k": null,
+      "cri": null,
+      "beam_angle_deg": null,
+      "ip_rating": null,
+      "lifespan_hours": null,
+      "dimmable": null
+    },
+    {
+      "model_number": "NS-PNR-FL-200",
+      "wattage_w": 200.0,
+      "luminous_flux_lm": 26000,
+      "cct_k": 5700,
+      "cri": 70,
+      "beam_angle_deg": 60,
+      "ip_rating": "IP66",
+      "lifespan_hours": 70000,
+      "dimmable": true
+    },
+    {
+      "model_number": "NS-PNR-FL-200",
+      "wattage_w": 200.0,
+      "luminous_flux_lm": 26000,
+      "cct_k": 5700,
+      "cri": 70,
+      "beam_angle_deg": 60,
+      "ip_rating": "IP66",
+      "lifespan_hours": 70000,
+      "dimmable": true
+    },
+    {
+      "model_number": "NS-PNR-FL-200",
+      "wattage_w": 200.0,
+      "luminous_flux_lm": 26000,
+      "cct_k": 5700,
+      "cri": 70,
+      "beam_angle_deg": 60,
+      "ip_rating": "IP66",
+      "lifespan_hours": 70000,
+      "dimmable": true
+    },
+    {
+      "model_number": "NS-PNR-FL-200",
+      "wattage_w": 200.0,
+      "luminous_flux_lm": 26000,
+      "cct_k": 5700,
+      "cri": 70,
+      "beam_angle_deg": 60,
+      "ip_rating": "IP66",
+      "lifespan_hours": 70000,
+      "dimmable": true
+    },
+    {
+      "model_number": "NS-PNR-FL-200",
+      "wattage_w": 200.0,
+      "luminous_flux_lm": 26000,
+      "cct_k": 5700,
+      "cri": 70,
+      "beam_angle_deg": 60,
+      "ip_rating": "IP66",
+      "lifespan_hours": 70000,
+      "dimmable": true
+    }
+  ],
+  "backfilled": [
+    {
+      "label": "day16-v2-eval",
+      "wattage_w": 200.0,
+      "score": 8
+    },
+    {
+      "label": "day17-verify-pass1",
+      "wattage_w": 185.0,
+      "score": 9
+    },
+    {
+      "label": "day18-only-e16",
+      "wattage_w": 185.0,
+      "score": 9
+    }
+  ],
+  "backfill_note": "Three pre-file observations. Only wattage_w was recorded at the time; other fields are null and must not be read as measurements.",
+  "pooled_noise_floor_fields": 1,
+  "total_observations": 8
+}

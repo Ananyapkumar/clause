@@ -178,7 +178,29 @@ def main() -> None:
     unstable = {}
     for field in FIELDS:
         counts = Counter(canonical(field, o.get(field)) for o in good)
-        modal_value, modal_count = counts.most_common(1)[0]
+
+        # DISPLAY THE RAW VALUE, NOT THE CANONICAL KEY - fixed Day 18.
+        #
+        # canonical() upper-cases text fields so that counting matches
+        # values_match. Printing that key made the e14 run report
+        #
+        #     model_number  VARIES  'AU-SOL-RS-L2-3O' x2
+        #
+        # when the model had actually returned 'AU-SOL-RS-l2-3O' - lowercase L,
+        # verbatim correct. The script displayed a string that never existed.
+        #
+        # On e14 of all documents. e14 exists to test whether OCR-damaged
+        # identifiers are preserved CHARACTER FOR CHARACTER, so a display layer
+        # that alters characters destroys the only thing being measured. It
+        # cost twenty minutes of chasing a scoring bug that was not there.
+        #
+        # Count on the canonical key; show the raw value.
+        raw_for_key = {}
+        for o in good:
+            raw_for_key.setdefault(canonical(field, o.get(field)), o.get(field))
+
+        modal_key, modal_count = counts.most_common(1)[0]
+        modal_value = raw_for_key[modal_key]
         agreement = modal_count / len(good)
 
         if len(counts) == 1:
@@ -187,9 +209,11 @@ def main() -> None:
             unstable[field] = {
                 "distinct_values": len(counts),
                 "agreement": round(agreement, 4),
-                "counts": {str(k): v for k, v in counts.most_common()},
+                "counts": {str(raw_for_key[k]): v
+                           for k, v in counts.most_common()},
             }
-            spread = "  ".join(f"{k!r} x{v}" for k, v in counts.most_common())
+            spread = "  ".join(f"{raw_for_key[k]!r} x{v}"
+                               for k, v in counts.most_common())
             print(f"  {field:<20} VARIES    {spread}")
             if truth is not None:
                 want = truth.get(field)
@@ -249,6 +273,62 @@ def main() -> None:
     # ---------------------------------------------------------------
     RESULTS_DIR.mkdir(exist_ok=True)
     out_path = RESULTS_DIR / f"variance-{doc_id}-{version}.json"
+
+    # ACCUMULATE, DO NOT OVERWRITE - added Day 18, second revision.
+    #
+    # WHY
+    #   The first 5-run block returned the same value 5 times and reported a
+    #   noise floor of 0. Pooled with the 3 observations that already existed
+    #   from earlier runs, the same field had produced TWO different values and
+    #   the real noise floor was 1 field, not 0.
+    #
+    #   A block of consecutive runs is one sample of the distribution, not the
+    #   distribution. Under a 75/25 split, five identical draws happen about
+    #   24% of the time - so "all five agreed" is unremarkable and must not be
+    #   read as "the field is stable".
+    #
+    #   Overwriting the file would have thrown away the earlier observations
+    #   that made this visible. So each invocation appends, and n grows across
+    #   days for free.
+    prior = {"observations": [], "scores": [], "blocks": []}
+    if out_path.exists():
+        prior = json.loads(out_path.read_text(encoding="utf-8"))
+        prior.setdefault("observations", [])
+        prior.setdefault("scores", [])
+        prior.setdefault("blocks", [])
+
+    all_observations = prior["observations"] + observations
+    all_scores = prior["scores"] + scores
+
+    # Pooled noise floor across EVERY observation ever recorded, which is the
+    # number that actually bounds what this eval can detect.
+    pooled = [s for s in all_scores if s is not None]
+    pooled_noise = (max(pooled) - min(pooled)) if len(pooled) >= 2 else None
+
+    pooled_unstable = {}
+    good_all = [o for o in all_observations if o is not None]
+    for f_ in FIELDS:
+        c = Counter(canonical(f_, o.get(f_)) for o in good_all)
+        if len(c) > 1:
+            pooled_unstable[f_] = {str(k): v for k, v in c.most_common()}
+
+    if pooled_noise is not None:
+        print("\n" + "=" * 62)
+        print("  POOLED ACROSS ALL RECORDED RUNS")
+        print("=" * 62)
+        print(f"  total observations   {len(good_all)}")
+        print(f"  scores               {pooled}")
+        print(f"  POOLED NOISE FLOOR   {pooled_noise} field(s)")
+        if pooled_unstable:
+            for f_, counts in pooled_unstable.items():
+                spread = "  ".join(f"{k} x{v}" for k, v in counts.items())
+                print(f"    {f_:<20} {spread}")
+        if pooled_noise > noise:
+            print()
+            print(f"  NOTE: this block alone reported {noise}. Pooled it is")
+            print(f"  {pooled_noise}. A single block underestimates variance -")
+            print(f"  use the pooled figure when making any version claim.")
+
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump({
             "document": doc_id,
@@ -258,10 +338,22 @@ def main() -> None:
             "runs_requested": runs,
             "runs_successful": len(good),
             "api_requests_used": total_requests,
-            "scores": scores,
-            "noise_floor_fields": noise,
-            "unstable_fields": unstable,
-            "observations": observations,
+            "scores": all_scores,
+            "observations": all_observations,
+            "this_block": {
+                "scores": scores,
+                "noise_floor_fields": noise,
+                "unstable_fields": unstable,
+            },
+            "blocks": prior["blocks"] + [{
+                "run_at": datetime.now(timezone.utc).isoformat(),
+                "runs": runs,
+                "scores": scores,
+                "median_latency_ms": statistics.median(latencies),
+            }],
+            "pooled_noise_floor_fields": pooled_noise,
+            "pooled_unstable_fields": pooled_unstable,
+            "total_observations": len(good_all),
         }, f, indent=2)
 
     print(f"\n  written to {out_path}")

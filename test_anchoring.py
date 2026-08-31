@@ -1,72 +1,82 @@
 """Does the verifier actually verify, or does it just agree?
 
-Day 18.
+Day 18.  REVISED Day 18 after the first version returned a confounded result.
 
-THE PROBLEM WITH DAY 17'S RESULT
---------------------------------
-verify_agent.py ran on e16 and pass 2 changed ZERO fields. That was recorded as
-"the verifier agreed with the extraction".
+--------------------------------------------------------------------------
+WHAT THE FIRST VERSION GOT WRONG - read this before trusting any output
+--------------------------------------------------------------------------
+The first version injected wattage_w = 200 into e16 (the table value, which the
+footnote corrects to 185) and asked whether the verifier would fix it. It did
+not. The script printed "VERIFIER IS ANCHORING".
 
-It is not evidence of anything, and here is why:
+That conclusion was not supported, because of something measured twenty minutes
+later: the extractor ITSELF returns 200 on e16 in most runs. Five consecutive
+measure_variance runs returned 200 five times out of five.
 
-    Pass 1 happened to return the CORRECT value (185).
-    So the verifier was shown a right answer and left it alone.
+So the verifier was handed the answer it already believes, and kept it. Two
+completely different explanations fit equally well:
 
-A verifier that leaves right answers alone and a verifier that leaves EVERY
-answer alone are indistinguishable from that run. The experiment never tested
-the thing it was built to test.
+    ANCHORING   - it keeps whatever it is shown, regardless of content.
+    AGREEMENT   - it independently thinks 200 is right, and said so.
 
-THE MISSING CONTROL
--------------------
-Hand the verifier a value that is KNOWN TO BE WRONG and see whether it corrects
-it.
+A test that cannot distinguish its own hypotheses is not a test. The design
+error was picking the injected value before measuring the model's base rate on
+that field - so the injection landed on the model's preferred answer, which is
+the one position where the two hypotheses make identical predictions.
 
-  - If it corrects the value -> the verification pass works. It can detect an
-    error and fix it, and the zero-change result on Day 17 means the extraction
-    was genuinely right.
+--------------------------------------------------------------------------
+THE FIX: inject against the model's prior, not with it
+--------------------------------------------------------------------------
+The diagnostic injection is the value the model does NOT usually produce.
 
-  - If it confirms the wrong value -> the verifier is ANCHORING. It is disposed
-    to agree with whatever candidate it is shown, the zero-change result carries
-    no information, and the entire second pass is 2x cost for nothing.
+For e16 that is 185 - which is also, inconveniently for intuition, the correct
+answer. So the decisive run is:
 
-This is a two-request experiment that decides whether a feature stays or goes.
-It should have been the first thing run, not the second.
+    py test_anchoring.py e16 --field wattage_w --value 185
 
-WHAT MAKES IT A FAIR TEST
--------------------------
-The injected wrong value must be PLAUSIBLE. Injecting wattage_w = 9999 proves
-nothing: the range constraint (le=2000) would reject it before the verifier's
-judgement mattered, and an absurd value is easy to reject for reasons unrelated
-to reading the document.
+    verifier KEEPS 185    -> ANCHORING. It accepted a value against its own
+                             prior purely because it was shown it. The Day 17
+                             "changed 0 fields" result carries no information.
 
-So the default injection for e16 is 200 - the number PRINTED IN THE TABLE, which
-the footnote then corrects to 185. It is in range, it appears verbatim in the
-document, and only the footnote-precedence rule makes it wrong. That is the
-hardest fair test available.
+    verifier CHANGES to 200 -> NOT anchoring. It is exercising independent
+                             judgement and overriding the candidate. The pass
+                             works as designed; it simply disagrees with the
+                             ground truth on this field - which is a different
+                             and much more interesting problem.
 
-COST
-----
-2 API requests: one to inject-and-verify, and that is it - the extraction pass
-is skipped entirely because the candidate is supplied by hand.
-Actually 1 request in the default mode. See --with-extract below.
+Note what this means: on THIS document, a verifier behaving correctly will
+produce a WRONG answer, and a verifier behaving badly will produce a right one.
+Scoring the output against ground truth would grade the two backwards. The
+thing being measured is the behaviour, not the score.
+
+--------------------------------------------------------------------------
+BASE RATE
+--------------------------------------------------------------------------
+This script now reads results/variance-<doc>-<version>.json if it exists and
+reports how often the extractor independently produced the injected value. That
+is the number that makes the result interpretable, and it is the number the
+first version did not have.
+
+Run measure_variance.py first. Without a base rate this test is guesswork.
+
+COST: 1 API request. 2 with --with-extract.
 
 Usage:
     py test_anchoring.py e16
-        Inject the wrong value into the pass-1 candidate and run ONLY the
-        verifier. 1 API request.
+        Uses the default injection for the document.
 
-    py test_anchoring.py e16 --field wattage_w --value 200
-        Choose the field and the wrong value explicitly.
+    py test_anchoring.py e16 --field wattage_w --value 185
+        The decisive run described above.
 
     py test_anchoring.py e16 --with-extract
-        Run a real extraction first, then corrupt one field of its output
-        before verifying. 2 API requests. Slightly more realistic, because
-        the other eight fields are then genuine model output rather than
-        ground truth.
+        Run a real extraction first and corrupt one field of its output, so the
+        other eight fields are genuine model output rather than ground truth.
+        2 API requests.
 """
 
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 from schema import FIELDS, LightingDatasheet, values_match
@@ -74,20 +84,42 @@ from verify_agent import verify
 
 DOCS_DIR = Path("evals/documents")
 TRUTH_DIR = Path("evals/ground_truth")
+RESULTS_DIR = Path("results")
 
-# Per-document default injections. Each one is a value that APPEARS in the
-# document but is wrong under the documented domain rules - the hardest fair
-# test, because rejecting it requires applying a rule rather than noticing
-# something absurd.
+# Per-document default injections.
+#
+# UPDATED after the base rate was measured. The right default is the value the
+# model does NOT usually produce, because that is where anchoring and agreement
+# make different predictions.
 DEFAULT_INJECTIONS = {
-    # Table says 200 W; footnote says units supplied after Jan 2026 draw 185 W.
-    "e16": ("wattage_w", 200.0),
+    # Extractor returns 200 in ~6 of 8 observed runs. So inject 185.
+    "e16": ("wattage_w", 185.0),
 }
+
+
+def load_base_rate(doc_id: str, version: str, field: str):
+    """How often did the extractor independently produce each value?
+
+    Returns a Counter keyed by the value, or None if no variance file exists.
+    Without this the test result cannot be interpreted - see the module
+    docstring for what happened when it was run without one.
+    """
+    path = RESULTS_DIR / f"variance-{doc_id}-{version}.json"
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    observed = [o.get(field) for o in data.get("observations", []) if o]
+    if not observed:
+        return None
+    return Counter(
+        float(v) if isinstance(v, (int, float)) else v for v in observed
+    )
 
 
 def main() -> None:
     args = sys.argv[1:]
     doc_id = args[0] if args and not args[0].startswith("--") else "e16"
+    version = "v2"
 
     doc_path = DOCS_DIR / f"{doc_id}.txt"
     truth_path = TRUTH_DIR / f"{doc_id}.json"
@@ -95,75 +127,91 @@ def main() -> None:
         print(f"No document at {doc_path}")
         raise SystemExit(1)
     if not truth_path.exists():
-        print(f"No ground truth at {truth_path} - this test needs a known "
-              f"correct answer to inject a known wrong one.")
+        print(f"No ground truth at {truth_path}.")
         raise SystemExit(1)
 
     document = doc_path.read_text(encoding="utf-8")
     truth = json.loads(truth_path.read_text(encoding="utf-8"))
 
-    # Which field to corrupt, and what to corrupt it to.
     if "--field" in args:
         field = args[args.index("--field") + 1]
-        raw = args[args.index("--value") + 1] if "--value" in args else None
-        if raw is None:
+        if "--value" not in args:
             print("--field requires --value")
             raise SystemExit(1)
+        raw = args[args.index("--value") + 1]
         try:
-            wrong_value = float(raw) if "." in raw or raw.isdigit() else raw
+            injected = float(raw)
         except ValueError:
-            wrong_value = raw
+            injected = raw
     elif doc_id in DEFAULT_INJECTIONS:
-        field, wrong_value = DEFAULT_INJECTIONS[doc_id]
+        field, injected = DEFAULT_INJECTIONS[doc_id]
     else:
-        print(f"No default injection for {doc_id}.")
-        print(f"Pick one yourself, e.g.:")
-        print(f"  py test_anchoring.py {doc_id} --field wattage_w --value 200")
-        print(f"\nChoose a value that APPEARS in the document but is wrong "
-              f"under the domain rules.")
-        print(f"An absurd value tests the range constraint, not the verifier.")
+        print(f"No default injection for {doc_id}. Use --field and --value.")
         raise SystemExit(1)
 
     correct_value = truth.get(field)
-
-    if values_match(field, wrong_value, correct_value):
-        print(f"The injected value {wrong_value!r} MATCHES ground truth "
-              f"{correct_value!r}.")
-        print("That is not a wrong answer, so this test would prove nothing.")
-        raise SystemExit(1)
-
-    requests_needed = 2 if "--with-extract" in args else 1
-
-    print(f"Document:        {doc_id}")
-    print(f"Field under test: {field}")
-    print(f"Ground truth:     {correct_value!r}")
-    print(f"INJECTED (wrong): {wrong_value!r}")
-    print(f"COST:             {requests_needed} API request(s)\n")
+    injected_is_correct = values_match(field, injected, correct_value)
 
     # ---------------------------------------------------------------
-    # BUILD THE CANDIDATE the verifier will be shown.
+    # BASE RATE - what does the extractor do on its own?
+    # ---------------------------------------------------------------
+    base = load_base_rate(doc_id, version, field)
+    injected_key = float(injected) if isinstance(injected, (int, float)) else injected
+
+    print(f"Document:          {doc_id}")
+    print(f"Field under test:  {field}")
+    print(f"Ground truth:      {correct_value!r}")
+    print(f"INJECTED:          {injected!r}"
+          f"{'  (this IS the correct answer)' if injected_is_correct else '  (wrong)'}")
+
+    against_prior = None
+    if base:
+        total = sum(base.values())
+        n_injected = base.get(injected_key, 0)
+        modal, modal_n = base.most_common(1)[0]
+        against_prior = n_injected < modal_n
+        print(f"\nExtractor base rate on this field ({total} unassisted runs):")
+        for value, count in base.most_common():
+            mark = "  <- injected" if value == injected_key else ""
+            print(f"    {value!r:<16} {count}/{total}{mark}")
+        if against_prior:
+            print(f"\n  The injected value is AGAINST the model's prior.")
+            print(f"  Anchoring and agreement predict different outcomes here.")
+            print(f"  This run is diagnostic.")
+        else:
+            print(f"\n  WARNING: the injected value IS the model's preferred")
+            print(f"  answer. Anchoring and agreement predict the SAME outcome,")
+            print(f"  so this run cannot distinguish them. Inject a value the")
+            print(f"  model does not usually produce.")
+    else:
+        print(f"\n  NO BASE RATE AVAILABLE.")
+        print(f"  Run:  py measure_variance.py {doc_id}")
+        print(f"  Without it, a 'no change' result is uninterpretable - it may")
+        print(f"  mean the verifier agrees, or that it agrees with everything.")
+
+    requests_needed = 2 if "--with-extract" in args else 1
+    print(f"\nCOST: {requests_needed} API request(s)")
+
+    # ---------------------------------------------------------------
+    # BUILD THE CANDIDATE
     # ---------------------------------------------------------------
     if "--with-extract" in args:
         from extract import extract
-        print("Running a real extraction first...")
+        print("\nRunning a real extraction first...")
         first = extract(document)
         if not first.ok:
             print(f"Extraction failed: {first.error}")
             raise SystemExit(1)
-        base = first.result.model_dump()
-        print(f"  extraction returned {field} = {base.get(field)!r}")
+        candidate_values = first.result.model_dump()
+        print(f"  extraction returned {field} = {candidate_values.get(field)!r}")
     else:
-        # Start from ground truth so every OTHER field is correct. This
-        # isolates the test: the verifier is shown eight right answers and
-        # one wrong one, so any change it makes is attributable.
-        base = {f: truth.get(f) for f in FIELDS}
+        # Every other field set to ground truth, so any change the verifier
+        # makes elsewhere is unambiguous damage.
+        candidate_values = {f: truth.get(f) for f in FIELDS}
 
-    base[field] = wrong_value
-    candidate = LightingDatasheet(**base)
+    candidate_values[field] = injected
+    candidate = LightingDatasheet(**candidate_values)
 
-    # ---------------------------------------------------------------
-    # RUN THE VERIFIER.
-    # ---------------------------------------------------------------
     print("\nRunning verification pass...")
     result = verify(document, candidate)
 
@@ -173,7 +221,7 @@ def main() -> None:
 
     after = result.verified.model_dump()
     got = after.get(field)
-    corrected = values_match(field, got, correct_value)
+    kept = values_match(field, got, injected)
 
     print(f"\nVerifier changed {len(result.changed_fields)} field(s):")
     if not result.changed_fields:
@@ -182,45 +230,53 @@ def main() -> None:
         print(f"  {c['field']:<20} {c['from']!r}  ->  {c['to']!r}")
 
     # ---------------------------------------------------------------
-    # THE VERDICT.
+    # VERDICT - interpreted against the base rate, not against the score
     # ---------------------------------------------------------------
-    print("\n" + "=" * 62)
-    print(f"  {field}:  shown {wrong_value!r}  ->  returned {got!r}"
-          f"   (correct is {correct_value!r})")
-    print("=" * 62)
+    print("\n" + "=" * 64)
+    print(f"  {field}:  shown {injected!r}  ->  returned {got!r}"
+          f"   (ground truth {correct_value!r})")
+    print("=" * 64)
 
-    if corrected:
-        print("  VERIFIER WORKS.")
-        print("  It was shown a plausible wrong value that appears in the")
-        print("  document, and it corrected it. The zero-change result on")
-        print("  Day 17 therefore means the extraction was genuinely right,")
-        print("  not that the verifier rubber-stamps its input.")
+    if against_prior is None:
+        print("  INCONCLUSIVE - no base rate. See above.")
+    elif not against_prior:
+        print("  CONFOUNDED - the injected value is the model's own preferred")
+        print("  answer, so this outcome is equally consistent with anchoring")
+        print("  and with genuine agreement. Re-run injecting a value the")
+        print("  model does not usually produce.")
+    elif kept:
+        print("  ANCHORING.")
+        print("  The verifier kept a value it does NOT normally produce, purely")
+        print("  because it was shown it. That is confirmation bias, not")
+        print("  verification: the pass ratifies its input.")
         print()
-        print("  Next question: what does it cost in the other direction?")
-        print("  Run it across the eval set and count BROKE as well as FIXED.")
-    else:
-        print("  VERIFIER IS ANCHORING.")
-        print("  It confirmed a value that is wrong under the domain rules and")
-        print("  that the document itself corrects in a footnote.")
+        print("  Consequence: 'changed 0 fields' means nothing, and a second")
+        print("  pass costs 2x for zero detection. Do not ship it.")
         print()
-        print("  Consequence: the Day 17 'changed 0 fields' result carries no")
-        print("  information. A second pass that agrees with whatever it is")
-        print("  shown is 2x cost and 2x latency for zero detection.")
-        print()
-        print("  Do NOT ship it. Options worth testing instead:")
-        print("    - blind second pass (extract twice, compare in code) so the")
-        print("      verifier is never shown the candidate at all")
-        print("    - one narrow question per field instead of nine at once")
+        print("  Worth testing instead:")
+        print("    - blind second pass: extract twice, compare in code, so the")
+        print("      verifier never sees the candidate")
+        print("    - one narrow question per field rather than nine at once")
         print("    - a different model for the second pass")
+    else:
+        print("  NOT ANCHORING - the verifier exercised independent judgement.")
+        print("  It overrode a value it was shown in favour of its own reading")
+        print("  of the document. The pass does detect and change things.")
+        print()
+        if not values_match(field, got, correct_value):
+            print("  BUT it moved AWAY from the ground truth. So the verifier")
+            print("  works and disagrees with the answer key - which makes this")
+            print("  a question about the answer key, not about the verifier.")
+            print(f"  See whether {correct_value!r} is genuinely the only")
+            print(f"  defensible reading of this document.")
 
-    # Did the verifier damage any of the eight correct fields?
     collateral = [f for f in FIELDS
                   if f != field
                   and not values_match(f, after.get(f), truth.get(f))]
     if collateral:
         print()
-        print(f"  WARNING - it also broke {len(collateral)} field(s) that were "
-              f"correct going in:")
+        print(f"  DAMAGE: it also broke {len(collateral)} field(s) that were")
+        print(f"  correct going in:")
         for f in collateral:
             print(f"    {f:<20} {truth.get(f)!r}  ->  {after.get(f)!r}")
         print("  Verification moves values in BOTH directions. A pass that")

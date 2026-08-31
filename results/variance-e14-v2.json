@@ -1,0 +1,115 @@
+{
+  "document": "e14",
+  "version": "v2",
+  "model": "gemini-3.6-flash",
+  "run_at": "2026-08-31T07:00:21.376351+00:00",
+  "runs_requested": 5,
+  "runs_successful": 5,
+  "api_requests_used": 5,
+  "scores": [
+    9,
+    8,
+    8,
+    9,
+    8
+  ],
+  "observations": [
+    {
+      "model_number": "AU-SOL-RS-l2-3O",
+      "wattage_w": 12.0,
+      "luminous_flux_lm": 1080,
+      "cct_k": 3000,
+      "cri": 90,
+      "beam_angle_deg": 38,
+      "ip_rating": "IP44",
+      "lifespan_hours": 40000,
+      "dimmable": true
+    },
+    {
+      "model_number": "AU-SOL-RS-12-30",
+      "wattage_w": 12.0,
+      "luminous_flux_lm": 1080,
+      "cct_k": 3000,
+      "cri": 90,
+      "beam_angle_deg": 38,
+      "ip_rating": "IP44",
+      "lifespan_hours": 40000,
+      "dimmable": true
+    },
+    {
+      "model_number": "AU-SOL-RS-12-30",
+      "wattage_w": 12.0,
+      "luminous_flux_lm": 1080,
+      "cct_k": 3000,
+      "cri": 90,
+      "beam_angle_deg": 38,
+      "ip_rating": "IP44",
+      "lifespan_hours": 40000,
+      "dimmable": true
+    },
+    {
+      "model_number": "AU-SOL-RS-l2-3O",
+      "wattage_w": 12.0,
+      "luminous_flux_lm": 1080,
+      "cct_k": 3000,
+      "cri": 90,
+      "beam_angle_deg": 38,
+      "ip_rating": "IP44",
+      "lifespan_hours": 40000,
+      "dimmable": true
+    },
+    {
+      "model_number": "AU-SOL-RS-12-30",
+      "wattage_w": 12.0,
+      "luminous_flux_lm": 1080,
+      "cct_k": 3000,
+      "cri": 90,
+      "beam_angle_deg": 38,
+      "ip_rating": "IP44",
+      "lifespan_hours": 40000,
+      "dimmable": true
+    }
+  ],
+  "this_block": {
+    "scores": [
+      9,
+      8,
+      8,
+      9,
+      8
+    ],
+    "noise_floor_fields": 1,
+    "unstable_fields": {
+      "model_number": {
+        "distinct_values": 2,
+        "agreement": 0.6,
+        "counts": {
+          "AU-SOL-RS-12-30": 3,
+          "AU-SOL-RS-L2-3O": 2
+        }
+      }
+    }
+  },
+  "blocks": [
+    {
+      "run_at": "2026-08-31T07:00:21.376351+00:00",
+      "runs": 5,
+      "scores": [
+        9,
+        8,
+        8,
+        9,
+        8
+      ],
+      "median_latency_ms": 75315
+    }
+  ],
+  "pooled_noise_floor_fields": 1,
+  "pooled_unstable_fields": {
+    "model_number": {
+      "AU-SOL-RS-12-30": 3,
+      "AU-SOL-RS-L2-3O": 2
+    }
+  },
+  "total_observations": 5
+}

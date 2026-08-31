@@ -244,6 +244,68 @@ than scoring against a defective key.
 
 ---
 
+### Finding C5 - an experiment that cannot distinguish its own hypotheses
+
+The first anchoring test injected wattage_w = 200 into e16 and asked whether the
+verifier would correct it. It did not, and the script printed "ANCHORING".
+
+That conclusion was unsupported. 200 is the value the extractor produces on its
+own in 6 of 8 runs. Handed its own preferred answer, a verifier that anchors and
+a verifier that genuinely agrees behave IDENTICALLY. The test had no power to
+separate them.
+
+The error was procedural, not statistical: the injection value was chosen before
+the base rate was measured, so it landed on the one point where the hypotheses
+make the same prediction. The fix - injecting against the model's prior - is
+obvious only once the base rate exists.
+
+The harness now loads the variance file, reports the base rate before running,
+and REFUSES to draw a conclusion when the injected value sits on the mode.
+
+### Finding C6 - a block of consecutive runs is one sample, not the distribution
+
+The first variance block returned the same value 5 times out of 5 and reported a
+noise floor of 0 fields.
+
+Pooled with 3 observations already on record, the same field had produced two
+different values and the true noise floor was 1 field.
+
+Five identical draws from a 75/25 split has probability 0.75^5 = 0.24. One run
+in four. So "all five agreed" is unremarkable and must never be read as "the
+field is stable".
+
+Two changes followed:
+  - measure_variance.py accumulates observations across invocations instead of
+    overwriting, so n grows over time and prior evidence cannot be destroyed.
+  - It prints the pooled figure alongside the block figure and warns when they
+    disagree.
+
+This is the same failure as the results-filename collision the same morning:
+destroying prior evidence is how you get a confident wrong answer.
+
+### Finding C7 - THE NOISE FLOOR, and what it invalidates
+
+Pooled across 8 observations of e16 under the v2 prompt:
+
+    scores          [8, 9, 9, 8, 8, 8, 8, 8]
+    NOISE FLOOR     1 field
+
+Every version comparison in this project to date is n=1 per condition:
+
+    v0   161/162
+    v2   161/162
+
+The difference between them is 0 fields, against a measured noise floor of 1.
+The comparison is not "no effect" - it is UNMEASURED. It cannot distinguish a
+one-field improvement from a re-roll, and no claim about the footnote rule's
+effect on aggregate accuracy is supported by it.
+
+Detecting a one-field difference in 162 would require repeats far beyond a
+20-request daily quota. The correct response is not a bigger experiment; it is
+to stop making version-to-version claims and report absolute performance with a
+stated error bar, plus per-field findings like A3 which do not depend on
+aggregate deltas.
+
 ## Category D - The eval set itself
 
 ### Finding D1 - 100% means the instrument has no resolution
@@ -266,6 +328,71 @@ domain experts would disagree.
 **This is the highest-priority next action for the project.**
 
 ---
+
+### Finding A3 - the footnote rule works for RELABELLING, not for CONDITIONING
+
+Measured Day 18, n=5 consecutive runs on e16, v2 prompt.
+
+e16 carries two footnotes. The v2 footnote-precedence rule was written to cover
+both. It covers one.
+
+    lifespan_hours    70000    5/5 correct    footnote APPLIED
+    wattage_w         200      5/5 wrong      footnote IGNORED
+
+Same document. Same rule. Same run. The difference is in the footnotes:
+
+  [2] "Rated life figure is L70/B50. The corresponding L80/B10 figure is 70 kh."
+      RELABELS a value against a criterion the domain rules already name. The
+      rule says take L80/B10; the footnote hands over a value labelled L80/B10.
+      No judgement is required - it is a string match against an existing rule.
+
+  [1] "...units supplied after January 2026 draw 185 W due to the revised
+      driver. The value in the table above applies to pre-2026 stock."
+      CONDITIONS a value on context the document never resolves. No rule states
+      which stock is being specified. Choosing 185 requires an UNSTATED premise:
+      that the currently-supplied product is the subject.
+
+So the rule succeeds where the footnote supplies a label the rules already ask
+for, and fails where the footnote requires the reader to supply a missing
+premise. That is a precise limitation, and it generalises beyond this document.
+
+At n=5 this is systematic, not the "inconsistency" recorded on Day 16.
+
+### Finding A4 - self-consistency cannot rescue a systematically biased field
+
+Across 8 pooled observations of e16 wattage_w: 200 six times, 185 twice.
+
+Majority voting over repeated samples is the standard remedy for
+non-determinism. It does not help here, and the reason matters: voting reduces
+variance AROUND the model's central tendency. It does not MOVE the central
+tendency. Where the mode is the wrong answer, voting converts an occasionally
+right system into a reliably wrong one.
+
+Single sampling gets e16 right 25% of the time. Majority-of-5 would get it
+right approximately never.
+
+No self-checking mechanism built on the same model can fix this field.
+
+### Finding A5 - the verification pass anchors; it does not verify
+
+Rejected Day 18 after 2 requests. See Finding C5 for the experiment that was
+run first and could not have decided anything.
+
+    shown 200 (model's own preferred answer, 6/8)  ->  returned 200
+    shown 185 (against the model's prior, 2/8)     ->  returned 185
+
+It returns what it is handed, in both directions. The second run is the
+diagnostic one: 185 is a value the extractor produces in only a quarter of
+unassisted runs, and the verifier kept it anyway. That is confirmation bias,
+not verification.
+
+Consequence: the Day 17 result "pass 2 changed 0 fields" carries no information
+whatsoever. A pass that ratifies its input costs 2x requests and 2x latency for
+zero detection capability.
+
+verify_agent.py is retained, unshipped, with this finding recorded - the same
+treatment as citations and retrieval. Third component built, measured, and
+rejected on evidence.
 
 ## Failure frequency, all categories
 

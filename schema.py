@@ -233,8 +233,36 @@ def values_match(field: str, predicted, expected) -> bool:
     if predicted is None or expected is None:
         return False
 
-    if field in ("model_number", "ip_rating"):
+    # ip_rating is a STANDARDISED code. "ip65", "IP65" and "Ip65" are the same
+    # code written carelessly, and the standard defines it in upper case, so
+    # folding case here is correct.
+    if field == "ip_rating":
         return str(predicted).strip().upper() == str(expected).strip().upper()
+
+    # model_number is CASE-SENSITIVE - tightened Day 18.
+    #
+    # It was folded to upper case along with ip_rating, inheriting a tolerance
+    # that was chosen for a standardised code and is wrong for an arbitrary
+    # identifier.
+    #
+    # WHY IT MATTERS HERE SPECIFICALLY
+    #   The OCR rule in this file says: normalise damaged NUMERIC fields,
+    #   reproduce model_number EXACTLY AS PRINTED. e14 exists to test that. Its
+    #   order code is printed 'AU-SOL-RS-l2-3O' - lowercase L for 1, capital O
+    #   for 0 - and the whole point is whether those characters survive.
+    #
+    #   Under case folding, a model that returned 'AU-SOL-RS-L2-3O' would have
+    #   scored CORRECT while silently altering the identifier. The eval could
+    #   not have detected a violation of its own headline rule.
+    #
+    # NO RECORDED SCORE CHANGES.
+    #   Every observation on record returns either the verbatim string or the
+    #   fully digit-normalised 'AU-SOL-RS-12-30', which fails under both the
+    #   old and new comparison. So this closes a latent hole rather than
+    #   restating history - which is why it is safe to change inside a version
+    #   rather than waiting for a boundary.
+    if field == "model_number":
+        return str(predicted).strip() == str(expected).strip()
 
     if field == "dimmable":
         return bool(predicted) == bool(expected)
