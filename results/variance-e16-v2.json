@@ -14,6 +14,7 @@
     8,
     8,
     8,
+    8,
     8
   ],
   "noise_floor_fields": 0,
@@ -106,6 +107,17 @@
       "ip_rating": "IP66",
       "lifespan_hours": 70000,
       "dimmable": true
+    },
+    {
+      "model_number": "NS-PNR-FL-200",
+      "wattage_w": 200.0,
+      "luminous_flux_lm": 26000,
+      "cct_k": 5700,
+      "cri": 70,
+      "beam_angle_deg": 60,
+      "ip_rating": "IP66",
+      "lifespan_hours": 70000,
+      "dimmable": true
     }
   ],
   "backfilled": [
@@ -127,5 +139,15 @@
   ],
   "backfill_note": "Three pre-file observations. Only wattage_w was recorded at the time; other fields are null and must not be read as measurements.",
   "pooled_noise_floor_fields": 1,
-  "total_observations": 8
+  "total_observations": 9,
+  "blocks": [
+    {
+      "run_at": "2026-09-01T01:33:51.972872+00:00",
+      "runs": 1,
+      "scores": [
+        8
+      ],
+      "source": "day19 full v2 baseline (same condition, pooled)"
+    }
+  ]
 }

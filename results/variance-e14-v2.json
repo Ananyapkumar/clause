@@ -11,7 +11,8 @@
     8,
     8,
     9,
-    8
+    8,
+    9
   ],
   "observations": [
     {
@@ -68,6 +69,17 @@
       "ip_rating": "IP44",
       "lifespan_hours": 40000,
       "dimmable": true
+    },
+    {
+      "model_number": "AU-SOL-RS-l2-3O",
+      "wattage_w": 12,
+      "luminous_flux_lm": 1080,
+      "cct_k": 3000,
+      "cri": 90,
+      "beam_angle_deg": 38,
+      "ip_rating": "IP44",
+      "lifespan_hours": 40000,
+      "dimmable": true
     }
   ],
   "this_block": {
@@ -102,6 +114,14 @@
         8
       ],
       "median_latency_ms": 75315
+    },
+    {
+      "run_at": "2026-09-01T01:33:51.972872+00:00",
+      "runs": 1,
+      "scores": [
+        9
+      ],
+      "source": "day19 full v2 baseline (same condition, pooled)"
     }
   ],
   "pooled_noise_floor_fields": 1,
@@ -111,5 +131,5 @@
       "AU-SOL-RS-L2-3O": 2
     }
   },
-  "total_observations": 5
+  "total_observations": 6
 }

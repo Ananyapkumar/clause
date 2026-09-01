@@ -161,4 +161,71 @@ results filename in that case, so the run cannot be mistaken for a baseline.
 
 ## RESULT
 
-_(to be filled in after the run — not before)_
+**Run completed. 18 documents, 18 requests, no hard failures.
+`results/v2.jsonl` written with `is_baseline: true`.**
+
+### Score
+
+> **161 / 162  =  99.4%**
+> 17 of 18 documents fully correct.
+
+Predicted 160.7 ± 0.7. Observed 161 — the modal outcome, 45% likely, and
+0.5 standard deviations from the point prediction.
+
+| Outcome | Predicted probability | Occurred |
+|---|---|---|
+| 162 | 10% | |
+| **161** | **45%** | **yes** |
+| 160 | 45% | |
+| anything else | 0% | |
+
+### Per-document predictions
+
+| Prediction | Outcome |
+|---|---|
+| `e16` `wattage_w` returns `200`, wrong — 75% likely | **Correct. Returned `200.0`, expected `185`** |
+| `e14` `model_number` returns the OCR-normalised form, wrong — 60% likely | Wrong prediction. Returned the verbatim form and scored 9/9 — the 40% branch |
+| All 16 other documents 9/9 | **Correct. All 16 clean** |
+
+### Falsification conditions — none triggered
+
+1. **A third document fails.** Did not happen. The only mismatch in 162
+   judgements was `e16` `wattage_w`. The claim behind `docs/variance.svg` —
+   that instability is confined to fields requiring domain judgement — survives
+   a test that could have broken it.
+2. **Score below 159.** Did not happen.
+3. **Score of 162.** Did not happen, so the reporting hazard did not arise.
+4. **Hard failure / incomplete run.** Did not happen. 18 requests, no retries
+   needed, quota not exhausted.
+
+### What the model got right, and what that is worth
+
+The variance model built on Day 18 predicted the score of an unseen run, named
+the failing field and its value in advance, and its falsification condition held.
+
+It should not be over-read. The score has four possible values under this model
+and two of them carry 90% of the probability, so a correct prediction is not a
+strong test on its own. **The load-bearing result is falsification condition 1:**
+sixteen documents that had one observation each were predicted stable, and all
+sixteen came back 9/9. That is the part that could have gone wrong and did not.
+
+### Incidental finding — the latency question is answered
+
+| | Median latency |
+|---|---|
+| Day 18 variance runs (n=10) | 72,595 ms |
+| Day 19 baseline runs (n=18) | **19,838 ms** |
+
+Same model, same documents, same code, 3.7x faster. Day 18's latencies — up to
+222 s on a 467-token request, with one attempt and no rate-limit message — were
+throttling absorbed silently inside the SDK, not model slowness. That confirms
+the hypothesis recorded on Day 6 and again on Day 18, and it means published
+latency figures must state when they were collected.
+
+### Cost
+
+| | |
+|---|---|
+| Full 18-document run | $0.008367 at list price |
+| Per document | **$0.000465** |
+| Actually paid | **$0.00** — free tier |

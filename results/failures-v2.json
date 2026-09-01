@@ -1,0 +1,171 @@
+{
+  "version": "v2",
+  "results_label": "v2",
+  "is_baseline": true,
+  "hard_failures": [],
+  "cases_run": [
+    "e01",
+    "e02",
+    "e03",
+    "e04",
+    "e05",
+    "e06",
+    "e07",
+    "e08",
+    "e09",
+    "e10",
+    "e11",
+    "e12",
+    "e13",
+    "e14",
+    "e15",
+    "e16",
+    "e17",
+    "e18"
+  ],
+  "domain_rules_in_prompt": true,
+  "run_at": "2026-09-01T01:33:51.972872+00:00",
+  "model": "gemini-3.6-flash",
+  "summary": {
+    "documents": 18,
+    "field_accuracy": 0.9938,
+    "fully_correct_docs": 0.9444,
+    "per_field": {
+      "model_number": 1.0,
+      "wattage_w": 0.9444,
+      "luminous_flux_lm": 1.0,
+      "cct_k": 1.0,
+      "cri": 1.0,
+      "beam_angle_deg": 1.0,
+      "ip_rating": 1.0,
+      "lifespan_hours": 1.0,
+      "dimmable": 1.0
+    },
+    "citations_total": 0,
+    "citations_verified": 0,
+    "citation_accuracy": 0.0,
+    "hallucination_rate": 1.0
+  },
+  "failures": [
+    {
+      "id": "e16",
+      "mismatches": [
+        {
+          "field": "wattage_w",
+          "expected": 185,
+          "got": 200.0
+        }
+      ]
+    }
+  ],
+  "citation_problems": [
+    {
+      "id": "e01",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e02",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e03",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e04",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e05",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e06",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e07",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e08",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e09",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e10",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e11",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e12",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e13",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e14",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e15",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e16",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e17",
+      "fields_filled": 7,
+      "citations_returned": 0,
+      "unverified_citations": []
+    },
+    {
+      "id": "e18",
+      "fields_filled": 9,
+      "citations_returned": 0,
+      "unverified_citations": []
+    }
+  ]
+}

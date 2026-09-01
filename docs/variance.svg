@@ -15,49 +15,49 @@
 <text x="670.0" y="112" font-size="11" fill="#6b7280" text-anchor="middle">100%</text>
 <text x="196" y="153" font-size="12.5" font-weight="600" fill="#1a1a1a" text-anchor="end">wattage_w</text>
 <rect x="210" y="132" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="678.0" y="144" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
-<rect x="210" y="151" width="115.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="333.0" y="163" font-size="10.5" fill="#6b7280">e16 · 2/8</text>
+<text x="678.0" y="144" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
+<rect x="210" y="151" width="102.2" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="320.2" y="163" font-size="10.5" fill="#6b7280">e16 · 2/9</text>
 <text x="196" y="208" font-size="12.5" font-weight="600" fill="#1a1a1a" text-anchor="end">model_number</text>
-<rect x="210" y="187" width="184.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="402.0" y="199" font-size="10.5" fill="#6b7280">e14 · 2/5</text>
+<rect x="210" y="187" width="230.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
+<text x="448.0" y="199" font-size="10.5" fill="#6b7280">e14 · 3/6</text>
 <rect x="210" y="206" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="678.0" y="218" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="218" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="263" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">luminous_flux_lm</text>
 <rect x="210" y="242" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="678.0" y="254" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="254" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="261" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="678.0" y="273" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="273" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="318" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">lifespan_hours</text>
 <rect x="210" y="297" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="678.0" y="309" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="309" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="316" width="460.0" height="15" rx="2" fill="#dc2626" opacity="0.95"/>
-<text x="678.0" y="328" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="328" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="373" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">cct_k</text>
 <rect x="210" y="352" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="364" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="364" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="371" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="383" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="383" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="428" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">cri</text>
 <rect x="210" y="407" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="419" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="419" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="426" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="438" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="438" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="483" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">beam_angle_deg</text>
 <rect x="210" y="462" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="474" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="474" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="481" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="493" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="493" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="538" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">ip_rating</text>
 <rect x="210" y="517" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="529" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="529" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="536" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="548" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="548" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <text x="196" y="593" font-size="12.5" font-weight="400" fill="#6b7280" text-anchor="end">dimmable</text>
 <rect x="210" y="572" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="584" font-size="10.5" fill="#6b7280">e14 · 5/5</text>
+<text x="678.0" y="584" font-size="10.5" fill="#6b7280">e14 · 6/6</text>
 <rect x="210" y="591" width="460.0" height="15" rx="2" fill="#3b82f6" opacity="0.5"/>
-<text x="678.0" y="603" font-size="10.5" fill="#6b7280">e16 · 5/5</text>
+<text x="678.0" y="603" font-size="10.5" fill="#6b7280">e16 · 6/6</text>
 <rect x="732" y="120" width="196" height="347" rx="6" fill="#f9fafb" stroke="#e5e7eb"/>
 <text x="746" y="146" font-size="12.5" font-weight="700" fill="#1a1a1a">THE FINDING</text>
 <text x="746" y="168" font-size="11.5" font-weight="400" fill="#6b7280">Transcription fields are</text>
@@ -78,7 +78,7 @@
 <text x="746" y="441" font-size="11" font-weight="400" fill="#6b7280">documents — red marks the</text>
 <text x="746" y="456" font-size="11" font-weight="400" fill="#6b7280">category, not the result.</text>
 <text x="732" y="497" font-size="12.5" font-weight="600" fill="#1a1a1a">Scores observed</text>
-<text x="732" y="517" font-size="11.5" fill="#6b7280">8–9 of 9, n=13 runs</text>
+<text x="732" y="517" font-size="11.5" fill="#6b7280">8–9 of 9, n=15 runs</text>
 <text x="732" y="535" font-size="11.5" fill="#6b7280">spread = 1 field</text>
 <rect x="32" y="643" width="11" height="11" rx="2" fill="#3b82f6" opacity="0.5"/>
 <text x="49" y="653" font-size="12" fill="#6b7280">transcription</text>
