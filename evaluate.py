@@ -267,6 +267,7 @@ print(f"Free tier allows 20 per day.\n")
 per_field_hits = {f: 0 for f in FIELDS}
 rows = []
 failures = []
+hard_failures = []          # documents that returned no valid output at all
 
 # Citation totals across the whole run - Day 10.
 cite_total = 0
@@ -309,6 +310,12 @@ for case in cases:
                      "latency_ms": run.latency_ms, "cost_usd": run.cost_usd})
         failures.append({"id": case["id"], "reason": "no valid output after retries",
                          "error": run.error})
+        # Recorded separately from scoring failures. A document that produced
+        # NO VALID OUTPUT scores 0/9, which is indistinguishable in the
+        # aggregate from a document the model got catastrophically wrong - and
+        # they mean completely different things. One is a broken run; the other
+        # is a result.
+        hard_failures.append(case["id"])
         print(f"  {case['id']}  FAIL  no valid output")
         continue
 
@@ -405,6 +412,38 @@ print("=" * 56)
 print(f"\n  {len(failures)} case(s) with mismatches -> "
       f"results/failures-{RESULTS_LABEL}.json")
 
+# =============================================================
+# BASELINE INTEGRITY - added Day 19
+# =============================================================
+# RESULTS_LABEL is decided before the run, from the flags. But whether a run is
+# a usable baseline is not knowable until it finishes: a document that failed
+# outright scores 0/9 and drags the aggregate down by nine judgements, which
+# looks like a quality collapse rather than a broken request.
+#
+# The realistic cause here is the daily quota. A full run needs 18 requests and
+# the free tier allows 20, so a couple of retries exhausts it mid-run and the
+# remaining documents fail for reasons that have nothing to do with extraction
+# quality.
+#
+# Same principle as the --only fix on Day 18: do not print a warning and write
+# the file anyway. Make the filename carry the defect, so an incomplete run
+# cannot be picked up later and read as a baseline.
+if hard_failures:
+    RESULTS_LABEL = f"{RESULTS_LABEL}-INCOMPLETE"
+    print()
+    print("=" * 56)
+    print(f"  {len(hard_failures)} DOCUMENT(S) PRODUCED NO VALID OUTPUT:")
+    print(f"    {', '.join(hard_failures)}")
+    print()
+    print("  THIS RUN IS NOT A BASELINE. The field-accuracy figure above")
+    print("  counts those documents as 0/9 and is therefore meaningless.")
+    print(f"  Results written to results/{RESULTS_LABEL}.jsonl so they cannot")
+    print("  be mistaken for one.")
+    print()
+    print("  Most likely cause: daily quota exhausted mid-run. Check the")
+    print("  error field in the failures file before assuming a model problem.")
+    print("=" * 56)
+
 RESULTS_DIR.mkdir(exist_ok=True)
 
 with open(RESULTS_DIR / f"{RESULTS_LABEL}.jsonl", "w", encoding="utf-8") as f:
@@ -415,7 +454,8 @@ with open(RESULTS_DIR / f"failures-{RESULTS_LABEL}.json", "w", encoding="utf-8")
     json.dump({
         "version": VERSION,
         "results_label": RESULTS_LABEL,
-        "is_baseline": not (ONLY or LIMIT),
+        "is_baseline": not (ONLY or LIMIT or hard_failures),
+        "hard_failures": hard_failures,
         "cases_run": [c["id"] for c in cases],
         "domain_rules_in_prompt": USE_DOMAIN_RULES,
         "run_at": datetime.now(timezone.utc).isoformat(),
