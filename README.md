@@ -315,14 +315,35 @@ reasonably disagree with the answer key.
 on the strength of one observation each. Two documents were measured because
 two was what the quota allowed.
 
-**No authentication on the public endpoint.** Anyone can spend the daily quota.
-Twenty requests and the service is down for the day.
-
-**Logs are written to an ephemeral filesystem.** On the free tier they are lost
-on restart. Logging to stdout is the fix and is not yet done.
-
 **No real traffic.** The service is deployed and reachable and has served only
 test requests.
+
+**Rate limiting is per-process.** The budget cap lives in memory, so with more
+than one worker the effective limit multiplies. A shared store (Redis) is the
+correct fix; not done, because a single free-tier instance runs one worker and
+adding a dependency for a problem I do not have is how projects rot.
+
+**One shared API token, no per-caller identity.** Fine for one consumer. A real
+deployment needs per-key identity so usage is attributable and a single key can
+be revoked without breaking everyone.
+
+### Closed on Day 20
+
+These were in this list for two weeks. Writing a limitation down honestly is
+worth something; leaving it written down is not.
+
+| Was | Now |
+|---|---|
+| Public endpoint — 20 requests from anyone and the service is dead for the day | Bearer token, compared with `hmac.compare_digest` so the comparison time does not leak how many characters were correct |
+| Logs written to an ephemeral container filesystem, lost on restart with no error | Structured JSON to stdout, captured by the platform. Content still deliberately not logged |
+| No input size limit — a 50 MB body exhausts memory | Rejected at 100 kB |
+| One generic error for every failure | 401 / 413 / 422 / 429 with `Retry-After` / 503 — because "fix your input", "wait an hour" and "wait until tomorrow" are three different instructions |
+| No request traceability | `X-Request-ID` on every response, logged |
+
+`test_api.py` covers all of it — **15 checks, 0 API requests**, because the
+model is stubbed and none of these questions involve the model. The API layer
+now has a regression suite that runs on every commit for free, while extraction
+quality is measured separately by `evaluate.py`, which costs requests.
 
 ---
 
@@ -366,6 +387,7 @@ python measure_variance.py e16     # noise floor, 5 requests
 python test_anchoring.py e16       # verification-pass diagnostic, 1 request
 python make_figures.py             # regenerate docs/variance.svg — 0 requests
 python agent_graph.py --mock       # agent structural test — 0 requests
+python test_api.py                 # API regression suite — 0 requests
 uvicorn api:app --reload           # serve on http://127.0.0.1:8000/docs
 ```
 
@@ -399,6 +421,9 @@ effects were measured locally before any request was spent on accuracy.
 | `verify_agent.py` | Verification pass — **rejected**, verdict at the top of the file |
 | `retrieve.py`, `ingest.py`, `search.py` | Retrieval — **rejected**, measurement recorded |
 | `verify.py` | Citation verification — **opt-in**, measurement recorded |
+| `test_api.py` | API regression suite — 15 checks, stubbed model, 0 requests |
+| `POSITIONING.md` | What this project is evidence of, and what it is not |
+| `outreach/` | Target criteria, message templates, contact tracker |
 | `analyze_logs.py` | Cost and latency from `requests.jsonl` |
 | `PREDICTION.md` | Pre-registered prediction for the v2 baseline |
 | `NOTES.md` | Working log — every error, finding and decision, dated |
