@@ -139,7 +139,7 @@ moment.
     results/v0.jsonl · results/failures.json
 ```
 
-**Stack:** Python · Pydantic · FastAPI · Google Gemini · Docker · Render
+**Stack:** Python · Pydantic · FastAPI · Google Gemini · LangGraph · ChromaDB · Render
 
 ---
 
@@ -326,6 +326,19 @@ adding a dependency for a problem I do not have is how projects rot.
 **One shared API token, no per-caller identity.** Fine for one consumer. A real
 deployment needs per-key identity so usage is attributable and a single key can
 be revoked without breaking everyone.
+
+**Authentication is implemented and tested, but switched off on the public
+demo — deliberately.** A demo nobody can call is not a demo. The control that
+actually matters on a free tier is the request budget, and that is enforced:
+18 per day, with `/health` reporting how many remain, so a caller who finds it
+exhausted sees why rather than a broken service. Set `CLAUSE_API_KEY` and auth
+turns on; the service logs which mode it started in.
+
+**The Dockerfile has never been built locally.** It is structurally complete and
+its dependencies match `requirements.txt`, but Docker Desktop would not start on
+the development machine and the deployment target builds remotely, so the
+container was never on the critical path. It is listed here rather than claimed
+as working.
 
 ### Closed on Day 20
 

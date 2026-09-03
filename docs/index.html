@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clause — measuring whether an AI extraction system is actually right</title>
+<meta name="description" content="A document extraction system for lighting datasheets, and the measurement discipline behind it. 161/162 field judgements — and what that number does not mean.">
+<style>
+  :root{
+    --ink:#15181d; --muted:#5b6472; --line:#e3e7ec; --bg:#ffffff;
+    --panel:#f7f9fb; --accent:#1d4ed8; --warn:#b91c1c;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px}
+  h1{font-size:34px;line-height:1.2;letter-spacing:-.02em;margin:0 0 14px}
+  h2{font-size:21px;letter-spacing:-.01em;margin:56px 0 14px;padding-top:26px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:28px 0 8px}
+  p{margin:0 0 16px}
+  .lede{font-size:19px;color:var(--muted);margin-bottom:28px}
+  .meta{font-size:14px;color:var(--muted);margin-bottom:40px}
+  .meta a{color:var(--accent);text-decoration:none;border-bottom:1px solid #c7d5f7}
+  .meta a:hover{border-color:var(--accent)}
+  a{color:var(--accent)}
+  strong{font-weight:650}
+  code{font-family:var(--mono);font-size:.88em;background:var(--panel);padding:1px 5px;border-radius:4px}
+  .stat{
+    display:flex;flex-wrap:wrap;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:28px 0
+  }
+  .stat div{flex:1 1 150px;background:#fff;padding:16px 18px}
+  .stat b{display:block;font-size:23px;letter-spacing:-.02em}
+  .stat span{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .callout{
+    background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--ink);
+    border-radius:0 8px 8px 0;padding:18px 22px;margin:26px 0
+  }
+  .callout p:last-child{margin-bottom:0}
+  .callout.warn{border-left-color:var(--warn)}
+  table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;margin:22px 0}
+  ul{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:9px}
+  .quote{font-size:18px;line-height:1.5;border-left:3px solid var(--line);padding-left:20px;margin:26px 0;color:var(--ink)}
+  footer{margin-top:64px;padding-top:26px;border-top:1px solid var(--line);font-size:14.5px;color:var(--muted)}
+  footer a{display:inline-block;margin-right:18px}
+  @media (prefers-color-scheme:dark){
+    :root{--ink:#e8ebef;--muted:#9aa4b2;--line:#2a3038;--bg:#0f1216;--panel:#161b22;--accent:#7ea6ff;--warn:#f87171}
+    .stat div{background:#12161b}
+    img{background:#fff}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>What if your AI is confidently wrong, and nobody notices?</h1>
+
+  <p class="lede">
+    I built a system that reads lighting product datasheets and pulls out nine
+    technical values. The extraction was the easy part. Working out whether it
+    was <em>right</em> took three times as long — and taught me more.
+  </p>
+
+  <p class="meta">
+    Ananya Kumar &nbsp;·&nbsp; 20 days &nbsp;·&nbsp;
+    <a href="https://github.com/Ananyapkumar/clause">Code and full measurements</a>
+    &nbsp;·&nbsp; <a href="https://clause-9kq9.onrender.com/docs">Live API</a>
+  </p>
+
+  <div class="stat">
+    <div><b>161/162</b><span>field judgements</span></div>
+    <div><b>18</b><span>documents, hand-labelled</span></div>
+    <div><b>±1 field</b><span>measured noise floor</span></div>
+    <div><b>$0.00047</b><span>per document</span></div>
+  </div>
+
+  <h2>The problem</h2>
+
+  <p>
+    A lighting datasheet tells you what a light fitting does — how much power it
+    draws, how much light it produces, how long it lasts. Specifiers and
+    wholesalers pull those figures out by hand, one PDF at a time.
+  </p>
+
+  <p>It looks like typing. It isn't.</p>
+
+  <p>
+    A single datasheet routinely prints <strong>three numbers that could all
+    plausibly be "the wattage"</strong>: the system power, the LED module load,
+    and an efficacy figure in lumens-per-watt that sits between them and looks
+    like it belongs to either. Only one is right.
+  </p>
+
+  <div class="callout">
+    <p>
+      Take the LED load instead of the system wattage and the electrical
+      circuit is undersized. Quote the warranty period instead of the L80/B10
+      rated life — routinely printed more prominently, and often double the
+      real figure — and the maintenance budget is wrong for a decade.
+    </p>
+    <p><strong>Knowing which number is correct is domain knowledge, not a parsing problem.</strong></p>
+  </div>
+
+  <p>
+    I spent years in the lighting industry before moving into AI engineering.
+    That turned out to be the part that mattered.
+  </p>
+
+  <h2>What I built</h2>
+
+  <p>
+    A service that takes datasheet text and returns nine validated fields as
+    structured data. A language model does the reading; a schema enforces the
+    shape; the domain rules — system wattage over LED load, rated life over
+    warranty, luminaire output over module output — are written into both the
+    prompt and the schema, because the model has no way to know them.
+  </p>
+
+  <p>
+    Behind it sits the part that took most of the time: an evaluation harness.
+    Eighteen documents, 162 individual field judgements, each answer written by
+    hand against the source. Every change is scored against it.
+  </p>
+
+  <h2>The result, stated honestly</h2>
+
+  <p class="quote">
+    161 of 162 field judgements correct. 17 of 18 documents perfect.
+  </p>
+
+  <p>
+    That number is one sample, not a property of the system — and I can say that
+    precisely, because I measured it.
+  </p>
+
+  <h2>The thing most projects never check</h2>
+
+  <p>
+    Language models are not deterministic. Run the same document, with the same
+    prompt, on the same model, and you can get a different answer. Everyone
+    knows this in the abstract. Almost nobody measures it.
+  </p>
+
+  <p>I did, and the result changed what I was allowed to claim.</p>
+
+  <img src="variance.svg" alt="Per-field correctness across repeated runs on identical input. Seven fields never move; the two that do are the two requiring a domain judgement.">
+
+  <p>
+    Across repeated identical runs on two documents, <strong>seven of the nine
+    fields returned the same value every single time.</strong> The two that
+    moved were the two that require a judgement rather than a transcription: a
+    wattage qualified by a footnote the document never fully resolves, and an
+    order code damaged by OCR where the rule is to preserve it exactly.
+  </p>
+
+  <div class="callout">
+    <p>
+      <strong>The system is deterministic where the task is transcription, and
+      non-deterministic where it requires judgement.</strong>
+    </p>
+    <p>
+      Which means the run-to-run noise is one field per document — and any
+      difference smaller than that between two versions of the system is not a
+      result. It is a coin flip.
+    </p>
+  </div>
+
+  <div class="callout warn">
+    <p>
+      <strong>So I retracted my own finding.</strong> I had two versions of the
+      prompt scoring 161/162 each and had been treating the comparison as
+      meaningful. It wasn't. The difference sat inside the noise I had just
+      measured. That is now written into the project's own documentation, in
+      place of the claim.
+    </p>
+  </div>
+
+  <h2>I predicted the score before I ran it</h2>
+
+  <p>
+    Once the variance was measured, it made a prediction. So before regenerating
+    the results I committed a file to version control stating what the run would
+    produce, the probability of each possible outcome, which two documents would
+    fail and with what values — and what result would prove the model wrong.
+  </p>
+
+  <table>
+    <tr><th></th><th>Predicted, in advance</th><th>Observed</th></tr>
+    <tr><td>Score</td><td>160.7 ± 0.7</td><td><strong>161</strong></td></tr>
+    <tr><td>Which field fails</td><td>e16 wattage, returns 200</td><td><strong>e16 wattage, returned 200</strong></td></tr>
+    <tr><td>Any other document failing</td><td>would falsify the finding</td><td><strong>none did</strong></td></tr>
+  </table>
+
+  <p>
+    The prediction is not the interesting part. The falsification condition is:
+    sixteen documents had been assumed stable on a single observation each, and
+    a failure in any of them would have meant the finding above was overstated.
+    All sixteen held.
+  </p>
+
+  <h2>Three things I built and then deleted</h2>
+
+  <p>
+    Each was implemented, measured against the eval set, and removed on the
+    numbers. The code stays in the repository with the verdict recorded at the
+    top of the file.
+  </p>
+
+  <table>
+    <tr><th>Component</th><th>What the measurement said</th></tr>
+    <tr>
+      <td><strong>Source citations</strong><br>Quote the line each value came from</td>
+      <td>Worked on simple documents. On the hardest one it took extraction from 9 fields correct to 1. Asking for evidence and extraction together degrades extraction.</td>
+    </tr>
+    <tr>
+      <td><strong>Retrieval (RAG)</strong><br>Fetch only the relevant passages</td>
+      <td>Increased the context by 24.7% and changed accuracy by nothing. Retrieval shrinks context only when most of the document is irrelevant — not true here.</td>
+    </tr>
+    <tr>
+      <td><strong>A verification pass</strong><br>A second call that checks the first</td>
+      <td>Shown its own preferred answer, it kept it. Shown the opposite, it kept that too. <strong>It returns whatever it is handed.</strong> Two API calls to find that out.</td>
+    </tr>
+  </table>
+
+  <h2>Four times my own measurement was wrong</h2>
+
+  <p>
+    On four occasions the harness reported a failure and the model was right —
+    the answer key was wrong. The first three drove structural fixes; the
+    evaluation now validates its own inputs before it is allowed to score
+    anything.
+  </p>
+
+  <ul>
+    <li><strong>Reported 11%.</strong> A formatting example had been copied into the answer key. The model had been correct on all 18 fields.</li>
+    <li><strong>Reported 92.6%.</strong> Two keys were missing from a file, and a missing key is not the same as "this value is genuinely absent".</li>
+    <li><strong>Reported 90.5%.</strong> Units left inside values, booleans written as text.</li>
+    <li><strong>One judgement call.</strong> My rule said to normalise OCR damage everywhere. The model preserved the order code exactly as printed, which is the better engineering decision — a silently corrected part number reconciles with nothing and surfaces when the wrong product arrives. I changed the answer key, not the model.</li>
+  </ul>
+
+  <div class="callout">
+    <p><strong>An evaluation score is only as trustworthy as the answer key behind it — and the answer key is the part nobody checks.</strong></p>
+  </div>
+
+  <h2>What this is not</h2>
+
+  <p>
+    All eighteen documents are synthetic. This has never run on a real
+    manufacturer PDF, so the accuracy figure describes performance on documents
+    from its own distribution and says little about real-world layout variety.
+    Ten of the eighteen answer keys were written unassisted; eight were assisted
+    and then verified field by field. Variance is measured on two documents, not
+    eighteen. The service is deployed and has served only test traffic.
+  </p>
+
+  <p>
+    All of that is in the repository's limitations section, because a number
+    without its caveats is a decoration.
+  </p>
+
+  <h2>What I do with this</h2>
+
+  <p>
+    Most teams shipping LLM features cannot tell you whether last week's prompt
+    change made things better or worse. There is usually a number, and it is
+    usually a single run, and nobody has checked what it can actually detect.
+  </p>
+
+  <p>
+    That is the work I want. If you have a feature whose correctness matters and
+    no measurement you trust, I will build you an evaluation harness for it —
+    real cases, hand-written expected outputs, per-field scoring, a number you
+    can run on every change. I will do the first one free, because a track
+    record on someone else's real system is worth more to me than the fee.
+  </p>
+
+  <p>
+    The only things I need are twenty real examples, and thirty minutes with
+    whoever knows what "correct" means for your data. That second one is where
+    these normally go wrong.
+  </p>
+
+  <footer>
+    <a href="https://github.com/Ananyapkumar/clause">Code &amp; measurements</a>
+    <a href="https://github.com/Ananyapkumar/clause/blob/main/PREDICTION.md">The pre-registered prediction</a>
+    <a href="https://github.com/Ananyapkumar/clause/blob/main/FAILURE_ANALYSIS.md">Every failure, catalogued</a>
+    <a href="https://www.linkedin.com/in/YOUR-HANDLE/">LinkedIn</a>
+  </footer>
+
+</div>
+</body>
+</html>
